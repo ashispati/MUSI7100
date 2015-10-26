@@ -12,6 +12,9 @@
 #define ACFPITCHTRACKER_H_INCLUDED
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "AudioSampleRingFrame.h"
+#include <vector>
+
+using namespace std;
 
 class ACFPitchTracker
 {
@@ -29,12 +32,11 @@ public:
         return sampleRate;
     }
     
-    /*
+    
     void setSampleRate(double sampleRatetoSet)
     {
         sampleRate = sampleRatetoSet;
     }
-    */
     
     int getwindowSize()
     {
@@ -84,7 +86,7 @@ private:
     
     float* autoCorrelation(AudioSampleRingFrame* window, int readPosition)
     {
-        float* autoCorrArray;
+        float* autoCorrArray = new float[windowSize];
         for (int delay = 0; delay < windowSize; delay++)
         {
             float dummy(0);
@@ -112,8 +114,8 @@ private:
     
     int findPeak(float* autoCorrArray)
     {
-        float* peaksLocation;
-        float* peakValue;
+        vector<float> peaksLocation;
+        vector<float> peakValue;
         int minOffsetSample = sampleRate/maxPitch;
         int maxOffsetSample = sampleRate/minPitch;
         int numPeaks(0);
@@ -123,12 +125,12 @@ private:
             float forDiff = autoCorrArray[i+1] - autoCorrArray[i];
             if (backDiff*forDiff <= 0)
             {
-                peaksLocation[numPeaks] = i;
-                peakValue[numPeaks] = autoCorrArray[i];
+                peaksLocation.push_back(i);
+                peakValue.push_back(autoCorrArray[i]);
                 numPeaks++;
             }
         }
-        if (peaksLocation == nullptr)
+        if (peaksLocation.size() == 0)
         {
             return maxIndexAutoCorr(autoCorrArray, minOffsetSample, maxOffsetSample);
         }

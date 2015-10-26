@@ -31,7 +31,7 @@ public:
     {
         if(bufferSize == hopSize)
         {
-            Logger::getCurrentLogger()->writeToLog (String(writePosition));
+            //Logger::getCurrentLogger()->writeToLog (String(writePosition));
             for (int i = 0; i < bufferSize; i++)
             {
                 setSample(0, i+writePosition, channelDataAvg[i]);
@@ -52,7 +52,7 @@ public:
     int getNextReadPosition()
     {
         readPosition = (readPosition + hopSize) % windowSize;
-        Logger::getCurrentLogger()->writeToLog (String(readPosition));
+        //Logger::getCurrentLogger()->writeToLog (String(readPosition));
         return readPosition;
         
     }

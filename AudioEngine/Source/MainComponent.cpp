@@ -33,6 +33,7 @@ public:
         addAndMakeVisible(recordButton);
         window = new AudioSampleRingFrame(windowSize);
         pitchTracker = new ACFPitchTracker();
+        pitchTracker->setSampleRate(sampleRateInputAudio);
         pitchTracker->setWindowSize(windowSize);
         
         //Logger::getCurrentLogger()->writeToLog (String(window->getNumSamples()));
@@ -54,7 +55,7 @@ public:
         message << "Preparing to play audio...\n";
         message << " samplesPerBlockExpected = " << samplesPerBlockExpected << "\n";
         message << " sampleRate = " << sampleRate;
-        //pitchTracker->setSampleRate(sampleRate);
+        sampleRateInputAudio = sampleRate;
         Logger::getCurrentLogger()->writeToLog (message);
     }
 
@@ -115,6 +116,7 @@ private:
     bool recordingStatus;
     AudioSampleRingFrame* window;
     ACFPitchTracker* pitchTracker;
+    double sampleRateInputAudio;
     
     void writeToFile(float channelDataAvg[], int bufferSize)
     {
@@ -133,7 +135,7 @@ private:
         }
         bufferData = bufferData + ";" + '\n';
         stream.writeText(bufferData, false, false);
-        Logger::getCurrentLogger()->writeToLog ("Complete one write operation buffer" + String(i));
+        //Logger::getCurrentLogger()->writeToLog ("Complete one write operation buffer" + String(i));
     }
     
     void writeFrameToFile(AudioSampleRingFrame* window, int readPosition, int frameSize)
@@ -153,7 +155,7 @@ private:
         windowData = windowData + ";" + '\n';
         stream.setPosition(stream.getPosition());
         stream.writeText(windowData, false, false);
-        Logger::getCurrentLogger()->writeToLog ("Complete one write operation frame" + String(i));
+        //Logger::getCurrentLogger()->writeToLog ("Complete one write operation frame" + String(i));
     }
     
     void startRecording()
