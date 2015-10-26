@@ -67,7 +67,20 @@ public:
         return hopSize;
     }
     
+    float rmsOfWindow()
+    {
+        float rms = 0;
+        float sampleValue = 0;
+        for (int i = 0; i < windowSize; i++)
+        {
+            sampleValue = getSample(0, i);
+            rms = rms + sampleValue*sampleValue;
+        }
+        rms = sqrt(rms/windowSize);
+        return rms;
+    }
     
+    /*
     float getMean()
     {
         float mean(0);
@@ -88,6 +101,7 @@ public:
         }
         
     }
+    */
     
 private:
     const int windowSize;

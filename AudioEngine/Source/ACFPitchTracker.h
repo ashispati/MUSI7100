@@ -70,10 +70,17 @@ public:
     
     float findACFPitchInHZ(AudioSampleRingFrame* window, int readPosition)
     {
-        float* autoCorrArray = autoCorrelation(window,readPosition);
-        int peakLocation = findPeak(autoCorrArray);
-        return float(sampleRate)/float(peakLocation);
-        
+        float rmsValue = window->rmsOfWindow();
+        if (rmsValue < 0.01)
+        {
+            return 0;
+        }
+        else
+        {
+            float* autoCorrArray = autoCorrelation(window,readPosition);
+            int peakLocation = findPeak(autoCorrArray);
+            return float(sampleRate)/float(peakLocation);
+        }
     }
     
 private:

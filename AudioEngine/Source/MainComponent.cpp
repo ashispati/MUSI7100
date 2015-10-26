@@ -74,9 +74,11 @@ public:
                     channelDataAvg[i] = (channelData1[i] + channelData2[i])/2;
                 }
                 window->addNextBufferToFrame(channelDataAvg, bufferSize);
-                writeToFile(channelDataAvg, bufferSize);
+                //writeToFile(channelDataAvg, bufferSize);
                 int readPosition = window->getNextReadPosition();
-                writeFrameToFile(window, readPosition ,windowSize);
+                //writeFrameToFile(window, readPosition ,windowSize);
+                //float rmsValue = window->rmsOfWindow();
+                //Logger::getCurrentLogger()->writeToLog (String(rmsValue));
                 float pitchOfFrame = pitchTracker->findACFPitchInHZ(window, readPosition);
                 Logger::getCurrentLogger()->writeToLog (String(pitchOfFrame));
             }
