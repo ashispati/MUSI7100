@@ -83,6 +83,22 @@ public:
         }
     }
     
+    float findACFPitchMidi(AudioSampleRingFrame* window, int readPosition)
+    {
+        float pitchInHz = findACFPitchInHZ(window, readPosition);
+        float midiPitch = 0;
+        if (pitchInHz == 0)
+        {
+            midiPitch = 0;
+        }
+        else
+        {
+            midiPitch = 69 + 12*log(pitchInHz/440)/log(2);
+        }
+        
+        return midiPitch;
+    }
+    
 private:
     int sampleRate;
     int windowSize;

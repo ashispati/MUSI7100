@@ -79,7 +79,7 @@ public:
                 //writeFrameToFile(window, readPosition ,windowSize);
                 //float rmsValue = window->rmsOfWindow();
                 //Logger::getCurrentLogger()->writeToLog (String(rmsValue));
-                float pitchOfFrame = pitchTracker->findACFPitchInHZ(window, readPosition);
+                float pitchOfFrame = pitchTracker->findACFPitchMidi(window, readPosition);
                 Logger::getCurrentLogger()->writeToLog (String(pitchOfFrame));
             }
         }
