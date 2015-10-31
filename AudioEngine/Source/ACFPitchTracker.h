@@ -79,6 +79,7 @@ public:
         {
             float* autoCorrArray = autoCorrelation(window,readPosition);
             int peakLocation = findPeak(autoCorrArray);
+            //Logger::getCurrentLogger()->writeToLog (String(peakLocation));
             return float(sampleRate)/float(peakLocation);
         }
     }

@@ -12,6 +12,8 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "AudioSampleRingFrame.h"
 #include "ACFPitchTracker.h"
+#include <vector>
+using namespace std;
 
 //==============================================================================
 /*
@@ -35,6 +37,8 @@ public:
         pitchTracker = new ACFPitchTracker();
         pitchTracker->setSampleRate(sampleRateInputAudio);
         pitchTracker->setWindowSize(windowSize);
+        numBuffers = 0;
+        channelDataAvg.begin();
         
         //Logger::getCurrentLogger()->writeToLog (String(window->getNumSamples()));
         //writeFrameToFile(window, windowSize);
@@ -66,22 +70,42 @@ public:
             if (bufferToFill.buffer->getNumChannels() > 0)
             {
                 int bufferSize = bufferToFill.numSamples;
+                int hopSize = window->getHopSize();
+                
                 const float* channelData1 = bufferToFill.buffer->getWritePointer (0, bufferToFill.startSample);
-                const float* channelData2 = bufferToFill.buffer->getWritePointer (1, bufferToFill.startSample);
-                float channelDataAvg[bufferSize];
+                const float* channelData2 = bufferToFill.buffer->getWritePointer (1, bufferToFill.startSample); //check for num of channels
                 for(int i=0; i < bufferSize; i++)
                 {
-                    channelDataAvg[i] = (channelData1[i] + channelData2[i])/2;
+                    channelDataAvg.push_back((channelData1[i] + channelData2[i])/2);
                 }
-                window->addNextBufferToFrame(channelDataAvg, bufferSize);
-                //writeToFile(channelDataAvg, bufferSize);
-                int readPosition = window->getNextReadPosition();
-                //writeFrameToFile(window, readPosition ,windowSize);
-                //float rmsValue = window->rmsOfWindow();
-                //Logger::getCurrentLogger()->writeToLog (String(rmsValue));
-                float pitchOfFrame = pitchTracker->findACFPitchMidi(window, readPosition);
-                Logger::getCurrentLogger()->writeToLog (String(pitchOfFrame));
+                
+                // code for testing the buffer and pitch tracker
+                /*
+                for(int i = 0; i < bufferSize; i++)
+                {
+                    float value = 0.5*sin(2*3.14159*261.23*(i+bufferSize*numBuffers)/44100);
+                    //float value = i + numBuffers*bufferSize;
+                    channelDataAvg.push_back(value);
+                }
+                */
+                    
+                while (channelDataAvg.size() >= hopSize)
+                {
+                    window->addNextBufferToFrame(channelDataAvg);
+                    //writeToFile(channelDataAvg, hopSize);
+                    int readPosition = window->getNextReadPosition();
+                    //writeFrameToFile(window, readPosition ,windowSize);
+                    float pitchOfFrame = pitchTracker->findACFPitchMidi(window, readPosition);
+                    Logger::getCurrentLogger()->writeToLog (String(pitchOfFrame));
+                    channelDataAvg.erase(channelDataAvg.begin(), channelDataAvg.begin()+hopSize);
+                }
+                
             }
+            numBuffers = numBuffers + 1;
+        }
+        else
+        {
+            numBuffers = 0;
         }
         
         bufferToFill.clearActiveBufferRegion();
@@ -119,8 +143,10 @@ private:
     AudioSampleRingFrame* window;
     ACFPitchTracker* pitchTracker;
     double sampleRateInputAudio;
+    int numBuffers;
+    vector<float> channelDataAvg;
     
-    void writeToFile(float channelDataAvg[], int bufferSize)
+    void writeToFile(float channelDataAvg[], int hopSize)
     {
         const File file(File::getSpecialLocation(File::userDocumentsDirectory).getChildFile("Buffer.txt"));
         FileOutputStream stream(file);
@@ -131,9 +157,29 @@ private:
         stream.setPosition(stream.getPosition());
         String bufferData;
         int i;
-        for (i=0; i < bufferSize; ++i)
+        for (i=0; i < hopSize; ++i)
         {
-            bufferData  = String(channelDataAvg[i]) + " " + bufferData;
+            bufferData  = bufferData + String(channelDataAvg[i]) + " ";
+        }
+        bufferData = bufferData + ";" + '\n';
+        stream.writeText(bufferData, false, false);
+        //Logger::getCurrentLogger()->writeToLog ("Complete one write operation buffer" + String(i));
+    }
+    
+    void writeToFile(vector<float> channelDataAvg, int hopSize)
+    {
+        const File file(File::getSpecialLocation(File::userDocumentsDirectory).getChildFile("Buffer.txt"));
+        FileOutputStream stream(file);
+        if (!stream.openedOk())
+        {
+            Logger::getCurrentLogger()->writeToLog ("Failed to open stream");
+        }
+        stream.setPosition(stream.getPosition());
+        String bufferData;
+        int i;
+        for (i=0; i < hopSize; ++i)
+        {
+            bufferData  = bufferData + String(channelDataAvg[i]) + " ";
         }
         bufferData = bufferData + ";" + '\n';
         stream.writeText(bufferData, false, false);
@@ -152,12 +198,18 @@ private:
         int i;
         for (i=0; i < frameSize; ++i)
         {
-            windowData  = String(window->getSample(0, (readPosition+i)%windowSize)) + " " + windowData;
+            windowData  = windowData + String(window->getSample(0, (readPosition+i)%windowSize)) + " ";
         }
         windowData = windowData + ";" + '\n';
         stream.setPosition(stream.getPosition());
         stream.writeText(windowData, false, false);
         //Logger::getCurrentLogger()->writeToLog ("Complete one write operation frame" + String(i));
+    }
+    
+    void removeFromChannelData(vector<float> channelDataAvg)
+    {
+        int length = channelDataAvg.size();
+        
     }
     
     void startRecording()

@@ -11,48 +11,37 @@
 #ifndef AUDIOSAMPLERINGFRAME_H_INCLUDED
 #define AUDIOSAMPLERINGFRAME_H_INCLUDED
 #include "../JuceLibraryCode/JuceHeader.h"
+#include <vector>
+using namespace std;
 
 class AudioSampleRingFrame : public AudioSampleBuffer
 {
 public:
-    AudioSampleRingFrame() : windowSize(1024), hopSize(512), writePosition(0), readPosition(512)
+    AudioSampleRingFrame() : windowSize(1024), hopSize(512), writePosition(windowSize - hopSize), readPosition(windowSize - hopSize)
     {
         setSize(1, windowSize);
         clear();
     }
     
-    AudioSampleRingFrame(int wSize) : windowSize(wSize), hopSize(512), writePosition(0), readPosition(512)
+    AudioSampleRingFrame(int wSize) : windowSize(wSize), hopSize(512), writePosition(windowSize - hopSize), readPosition(windowSize - hopSize)
     {
         setSize(1, windowSize);
         clear();
     }
 
-    void addNextBufferToFrame(float channelDataAvg[], int bufferSize)
+    void addNextBufferToFrame(vector<float> channelDataAvg)
     {
-        if(bufferSize == hopSize)
+        //Logger::getCurrentLogger()->writeToLog (String(writePosition));
+        for (int i = 0; i < hopSize; i++)
         {
-            //Logger::getCurrentLogger()->writeToLog (String(writePosition));
-            for (int i = 0; i < bufferSize; i++)
-            {
-                setSample(0, i+writePosition, channelDataAvg[i]);
-            }
-            writePosition = (writePosition+bufferSize) % windowSize;
+            setSample(0, i+writePosition, channelDataAvg[i]);
         }
-        else if (bufferSize > hopSize)
-        {
-            Logger::getCurrentLogger()->writeToLog ("Hop Size and Buffer Size don't match");
-        }
-        else if(bufferSize < hopSize)
-        {
-            Logger::getCurrentLogger()->writeToLog ("Hop Size and Buffer Size don't match");
-        }
-        
+        writePosition = (writePosition+hopSize) % windowSize;
     }
     
     int getNextReadPosition()
     {
         readPosition = (readPosition + hopSize) % windowSize;
-        //Logger::getCurrentLogger()->writeToLog (String(readPosition));
         return readPosition;
         
     }
