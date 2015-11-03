@@ -416,6 +416,7 @@
 		6BC910AE32CDF8EF52AEAC43 = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = "juce_DirectoryContentsDisplayComponent.cpp"; path = "../../../Desktop/JUCE-OSX/modules/juce_gui_basics/filebrowser/juce_DirectoryContentsDisplayComponent.cpp"; sourceTree = "SOURCE_ROOT"; };
 		6BE8D9E2DADF98FA4CF5EE1C = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = "juce_mac_Fonts.mm"; path = "../../../Desktop/JUCE-OSX/modules/juce_graphics/native/juce_mac_Fonts.mm"; sourceTree = "SOURCE_ROOT"; };
 		6C03CEE53C2758EFBE1E689E = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "juce_ComponentBuilder.h"; path = "../../../Desktop/JUCE-OSX/modules/juce_gui_basics/layout/juce_ComponentBuilder.h"; sourceTree = "SOURCE_ROOT"; };
+		6C8A10220DC92F126D8B450D = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = PitchTracker.h; path = ../../Source/PitchTracker.h; sourceTree = "SOURCE_ROOT"; };
 		6C8E61D9B0BF6046FC6E195D = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "juce_AnimatedPositionBehaviours.h"; path = "../../../Desktop/JUCE-OSX/modules/juce_gui_basics/layout/juce_AnimatedPositionBehaviours.h"; sourceTree = "SOURCE_ROOT"; };
 		6CB267B9B766C499C7BB6927 = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = "juce_PluginDescription.cpp"; path = "../../../Desktop/JUCE-OSX/modules/juce_audio_processors/processors/juce_PluginDescription.cpp"; sourceTree = "SOURCE_ROOT"; };
 		6CFA5AF2D110CB15F5F84D06 = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = "juce_DialogWindow.cpp"; path = "../../../Desktop/JUCE-OSX/modules/juce_gui_basics/windows/juce_DialogWindow.cpp"; sourceTree = "SOURCE_ROOT"; };
@@ -767,6 +768,7 @@
 		D00E3AC128AF45B3819842A5 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "juce_DrawableShape.h"; path = "../../../Desktop/JUCE-OSX/modules/juce_gui_basics/drawables/juce_DrawableShape.h"; sourceTree = "SOURCE_ROOT"; };
 		D0324E40E1792CC13152550F = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "juce_ProgressBar.h"; path = "../../../Desktop/JUCE-OSX/modules/juce_gui_basics/widgets/juce_ProgressBar.h"; sourceTree = "SOURCE_ROOT"; };
 		D0A045E75C2F01A3DC24F2B6 = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = "juce_InterprocessConnectionServer.cpp"; path = "../../../Desktop/JUCE-OSX/modules/juce_events/interprocess/juce_InterprocessConnectionServer.cpp"; sourceTree = "SOURCE_ROOT"; };
+		D15C41ED1416A0FEFD58B285 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = PitchContour.h; path = ../../Source/PitchContour.h; sourceTree = "SOURCE_ROOT"; };
 		D178DC895B2436AA7069083E = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = "juce_QuickTimeAudioFormat.cpp"; path = "../../../Desktop/JUCE-OSX/modules/juce_audio_formats/codecs/juce_QuickTimeAudioFormat.cpp"; sourceTree = "SOURCE_ROOT"; };
 		D1A1782FA855E07B9A5A0342 = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = "juce_ButtonPropertyComponent.cpp"; path = "../../../Desktop/JUCE-OSX/modules/juce_gui_basics/properties/juce_ButtonPropertyComponent.cpp"; sourceTree = "SOURCE_ROOT"; };
 		D244A5A3D993CDD168606501 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "juce_ReferenceCountedObject.h"; path = "../../../Desktop/JUCE-OSX/modules/juce_core/memory/juce_ReferenceCountedObject.h"; sourceTree = "SOURCE_ROOT"; };
@@ -930,7 +932,9 @@
 		FF52323DA22D08B403A03FE4 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "juce_SparseSet.h"; path = "../../../Desktop/JUCE-OSX/modules/juce_core/containers/juce_SparseSet.h"; sourceTree = "SOURCE_ROOT"; };
 		FFB37AB001E67273568E772D = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "juce_LinkedListPointer.h"; path = "../../../Desktop/JUCE-OSX/modules/juce_core/containers/juce_LinkedListPointer.h"; sourceTree = "SOURCE_ROOT"; };
 		7B8D6AD14B9A78F3A7AA1FC8 = {isa = PBXGroup; children = (
+					D15C41ED1416A0FEFD58B285,
 					73128082669016BA4902D192,
+					6C8A10220DC92F126D8B450D,
 					C677A33B1E08D8BFA4342BEB,
 					A75B82D9B4836778A36C9A39,
 					CB6CD884960BA7A1BB9F5ADD, ); name = Source; sourceTree = "<group>"; };

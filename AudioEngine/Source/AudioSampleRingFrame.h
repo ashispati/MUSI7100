@@ -37,13 +37,12 @@ public:
             setSample(0, i+writePosition, channelDataAvg[i]);
         }
         writePosition = (writePosition+hopSize) % windowSize;
+        readPosition = getNextReadPosition();
     }
     
-    int getNextReadPosition()
+    int getReadPosition()
     {
-        readPosition = (readPosition + hopSize) % windowSize;
         return readPosition;
-        
     }
     
     int getWindowSize()
@@ -62,11 +61,31 @@ public:
         float sampleValue = 0;
         for (int i = 0; i < windowSize; i++)
         {
-            sampleValue = getSample(0, i);
+            sampleValue = getSample(0, (readPosition+i)%windowSize);
             rms = rms + sampleValue*sampleValue;
         }
         rms = sqrt(rms/windowSize);
         return rms;
+    }
+    
+    void writeFrameToFile()
+    {
+        const File file(File::getSpecialLocation(File::userDocumentsDirectory).getChildFile("Frame.txt"));
+        FileOutputStream stream(file);
+        if (!stream.openedOk())
+        {
+            Logger::getCurrentLogger()->writeToLog ("Failed to open stream");
+        }
+        String windowData;
+        int i;
+        for (i=0; i < windowSize; ++i)
+        {
+            windowData  = windowData + String(getSample(0, (readPosition+i)%windowSize)) + " ";
+        }
+        windowData = windowData + ";" + '\n';
+        stream.setPosition(stream.getPosition());
+        stream.writeText(windowData, false, false);
+        //Logger::getCurrentLogger()->writeToLog ("Complete one write operation frame" + String(i));
     }
     
     /*
@@ -97,6 +116,13 @@ private:
     const int hopSize;
     int writePosition;
     int readPosition;
+    
+    int getNextReadPosition()
+    {
+        readPosition = (readPosition + hopSize) % windowSize;
+        return readPosition;
+        
+    }
     
 };
 

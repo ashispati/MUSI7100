@@ -5,8 +5,10 @@
               jucerVersion="3.2.0">
   <MAINGROUP id="bWYqtX" name="AudioEngine">
     <GROUP id="{F0B6C9AF-6F87-181D-1CEA-A73A98D8E8B2}" name="Source">
-      <FILE id="QEIEoA" name="ACFPitchTracker.h" compile="0" resource="0"
+      <FILE id="SPs00T" name="PitchContour.h" compile="0" resource="0" file="Source/PitchContour.h"/>
+      <FILE id="FwXzy7" name="ACFPitchTracker.h" compile="0" resource="0"
             file="Source/ACFPitchTracker.h"/>
+      <FILE id="c4yAsh" name="PitchTracker.h" compile="0" resource="0" file="Source/PitchTracker.h"/>
       <FILE id="wLHtPx" name="AudioSampleRingFrame.h" compile="0" resource="0"
             file="Source/AudioSampleRingFrame.h"/>
       <FILE id="KUQLtk" name="MainComponent.cpp" compile="1" resource="0"

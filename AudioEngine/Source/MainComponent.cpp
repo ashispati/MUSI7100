@@ -12,6 +12,8 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "AudioSampleRingFrame.h"
 #include "ACFPitchTracker.h"
+#include "PitchTracker.h"
+#include "PitchContour.h"
 #include <vector>
 using namespace std;
 
@@ -26,8 +28,9 @@ public:
     //==============================================================================
     MainContentComponent() : windowSize(1024),recordingStatus(false)
     {
-        setSize (800, 600);
+        setSize (800, 400);
         setAudioChannels (2, 0);
+        addAndMakeVisible(pitchContour);
         recordButton.setColour (TextButton::buttonColourId, Colour (0xffff5c5c));
         recordButton.setColour (TextButton::textColourOnId, Colours::black);
         recordButton.setButtonText ("Start");
@@ -72,30 +75,30 @@ public:
                 int bufferSize = bufferToFill.numSamples;
                 int hopSize = window->getHopSize();
                 
+                
                 const float* channelData1 = bufferToFill.buffer->getWritePointer (0, bufferToFill.startSample);
                 const float* channelData2 = bufferToFill.buffer->getWritePointer (1, bufferToFill.startSample); //check for num of channels
                 for(int i=0; i < bufferSize; i++)
                 {
                     channelDataAvg.push_back((channelData1[i] + channelData2[i])/2);
                 }
+                /*
                 
                 // code for testing the buffer and pitch tracker
-                /*
                 for(int i = 0; i < bufferSize; i++)
                 {
-                    float value = 0.5*sin(2*3.14159*261.23*(i+bufferSize*numBuffers)/44100);
+                    float value = 0.5*sin(2*3.14159*441*(i+bufferSize*numBuffers)/44100);
                     //float value = i + numBuffers*bufferSize;
                     channelDataAvg.push_back(value);
                 }
-                */
-                    
+                  */
                 while (channelDataAvg.size() >= hopSize)
                 {
                     window->addNextBufferToFrame(channelDataAvg);
                     //writeToFile(channelDataAvg, hopSize);
-                    int readPosition = window->getNextReadPosition();
-                    //writeFrameToFile(window, readPosition ,windowSize);
-                    float pitchOfFrame = pitchTracker->findACFPitchMidi(window, readPosition);
+                    //window->writeFrameToFile();
+                    float pitchOfFrame = pitchTracker->findACFPitchMidi(window);
+                    pitchContour.drawPitchTrack(pitchOfFrame);
                     Logger::getCurrentLogger()->writeToLog (String(pitchOfFrame));
                     channelDataAvg.erase(channelDataAvg.begin(), channelDataAvg.begin()+hopSize);
                 }
@@ -119,20 +122,42 @@ public:
     //=======================================================================
     void paint (Graphics& g) override
     {
-        // (Our component is opaque, so we must completely fill the background with a solid colour)
         g.fillAll (Colours::black);
-
+        //int width = getWidth();
+        //int height = getHeight();
+        //const int imageWidth = pitchContour.getWidth()-1;
+        //const int imageHeight = pitchContour.getHeight();
+        //Logger::getCurrentLogger()->writeToLog ("Paint");
+        //g.drawImageWithin(pitchContour, (width - imageWidth)/2, 0, imageWidth, imageHeight, RectanglePlacement::stretchToFit);
 
         // You can add your drawing code here!
     }
-
+    
+    /*
+    void drawNextPitchValue(float pitchInMidi)
+    {
+        const int imageWidth = pitchContour.getWidth()-1;
+        const int imageHeight = pitchContour.getHeight();
+        pitchContour.moveImageSection(0, 0, 1, 0, imageWidth, imageHeight);
+        int pitchInInt = (int)pitchInMidi;
+        const int pitchIndex = (pitchInInt - 48);
+        Logger::getCurrentLogger()->writeToLog (String(pitchIndex));
+        for (int y = pitchIndex*10; y < pitchIndex*10+10; y++)
+        {
+            pitchContour.setPixelAt(imageWidth, imageHeight-y, Colour (0xffff5c5c));
+        }
+        
+    }
+     */
+    
     void resized() override
     {
         int width = 40;
         int height = 20;
         int posx = getWidth()/2;
-        int posy = getHeight()/2;
+        int posy = getHeight()-10;
         recordButton.setBounds(posx-20, posy-20, width, height);
+        pitchContour.setBounds(20, 20, posx*2-40, posy-50);
     }
 
 
@@ -142,9 +167,12 @@ private:
     bool recordingStatus;
     AudioSampleRingFrame* window;
     ACFPitchTracker* pitchTracker;
+    PitchContour pitchContour;
     double sampleRateInputAudio;
     int numBuffers;
     vector<float> channelDataAvg;
+   
+
     
     void writeToFile(float channelDataAvg[], int hopSize)
     {
@@ -184,32 +212,6 @@ private:
         bufferData = bufferData + ";" + '\n';
         stream.writeText(bufferData, false, false);
         //Logger::getCurrentLogger()->writeToLog ("Complete one write operation buffer" + String(i));
-    }
-    
-    void writeFrameToFile(AudioSampleRingFrame* window, int readPosition, int frameSize)
-    {
-        const File file(File::getSpecialLocation(File::userDocumentsDirectory).getChildFile("Frame.txt"));
-        FileOutputStream stream(file);
-        if (!stream.openedOk())
-        {
-            Logger::getCurrentLogger()->writeToLog ("Failed to open stream");
-        }
-        String windowData;
-        int i;
-        for (i=0; i < frameSize; ++i)
-        {
-            windowData  = windowData + String(window->getSample(0, (readPosition+i)%windowSize)) + " ";
-        }
-        windowData = windowData + ";" + '\n';
-        stream.setPosition(stream.getPosition());
-        stream.writeText(windowData, false, false);
-        //Logger::getCurrentLogger()->writeToLog ("Complete one write operation frame" + String(i));
-    }
-    
-    void removeFromChannelData(vector<float> channelDataAvg)
-    {
-        int length = channelDataAvg.size();
-        
     }
     
     void startRecording()
