@@ -91,15 +91,14 @@ public:
                     //float value = i + numBuffers*bufferSize;
                     channelDataAvg.push_back(value);
                 }
-                  */
+                */
                 while (channelDataAvg.size() >= hopSize)
                 {
                     window->addNextBufferToFrame(channelDataAvg);
                     //writeToFile(channelDataAvg, hopSize);
                     //window->writeFrameToFile();
-                    float pitchOfFrame = pitchTracker->findACFPitchMidi(window);
-                    pitchContour.drawPitchTrack(pitchOfFrame);
-                    Logger::getCurrentLogger()->writeToLog (String(pitchOfFrame));
+                    float midiPitchOfFrame = pitchTracker->findACFPitchMidi(window);
+                    pitchContour.drawPitchTrack(midiPitchOfFrame);
                     channelDataAvg.erase(channelDataAvg.begin(), channelDataAvg.begin()+hopSize);
                 }
                 
