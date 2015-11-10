@@ -64,12 +64,35 @@ public:
         maxFreqInHz = maxPitchtoSet;
     }
     
-    virtual float findACFPitchInHZ(AudioSampleRingFrame* window) = 0;
+    int getLengthOfPitchArray()
+    {
+        return pitchArray.size();
+    }
+    
+    float movingAverageFilter(float midiPitch)
+    {
+        int filterLen = 10;
+        if (pitchArray.size() >= filterLen-1)
+        {
+            for (int i = 0; i < filterLen-1; i++)
+            {
+                midiPitch = midiPitch + pitchArray[pitchArray.size()-i];
+            }
+            midiPitch = midiPitch/filterLen;
+            return midiPitch;
+        }
+        else
+        {
+            pitchArray.push_back(midiPitch);
+            return midiPitch;
+        }
+    }
+    
     
     float findACFPitchMidi(AudioSampleRingFrame* window)
     {
         float pitchInHz = findACFPitchInHZ(window);
-        Logger::getCurrentLogger()->writeToLog (String(pitchInHz));
+        //Logger::getCurrentLogger()->writeToLog (String(pitchInHz));
         float midiPitch = 0;
         if (pitchInHz == 0)
         {
@@ -79,7 +102,9 @@ public:
         {
             midiPitch = 69 + 12*log(pitchInHz/440)/log(2);
         }
-        
+        pitchArray.push_back(midiPitch);
+        //midiPitch = movingAverageFilter(midiPitch);
+        Logger::getCurrentLogger()->writeToLog (String(midiPitch));
         return midiPitch;
     }
     
@@ -90,6 +115,9 @@ protected:
     int minFreqInHz; //upper frequency limit in Hz
     int maxFreqInHz; //lower frequency limit in Hz
     float hammingWindowCoeff[2048];
+    vector<float> pitchArray;
+    
+    virtual float findACFPitchInHZ(AudioSampleRingFrame* window) = 0;
     
     void hammingWeighting(float currFrame[])
     {

@@ -83,21 +83,23 @@ public:
                     channelDataAvg.push_back((channelData1[i] + channelData2[i])/2);
                 }
                 /*
-                
                 // code for testing the buffer and pitch tracker
                 for(int i = 0; i < bufferSize; i++)
                 {
-                    float value = 0.5*sin(2*3.14159*441*(i+bufferSize*numBuffers)/44100);
-                    //float value = i + numBuffers*bufferSize;
+                    //float value = 0.5*sin(2*3.14159*441*(i+bufferSize*numBuffers)/44100);
+                    float value = i + numBuffers*bufferSize;
                     channelDataAvg.push_back(value);
                 }
                 */
+                writeDataToFile(channelDataAvg, bufferSize);
+                
                 while (channelDataAvg.size() >= hopSize)
                 {
                     window->addNextBufferToFrame(channelDataAvg);
                     //writeToFile(channelDataAvg, hopSize);
-                    //window->writeFrameToFile();
+                    window->writeFrameToFile();
                     float midiPitchOfFrame = pitchTracker->findACFPitchMidi(window);
+                    writePitchToFile(midiPitchOfFrame);
                     pitchContour.drawPitchTrack(midiPitchOfFrame);
                     channelDataAvg.erase(channelDataAvg.begin(), channelDataAvg.begin()+hopSize);
                 }
@@ -122,32 +124,9 @@ public:
     void paint (Graphics& g) override
     {
         g.fillAll (Colours::black);
-        //int width = getWidth();
-        //int height = getHeight();
-        //const int imageWidth = pitchContour.getWidth()-1;
-        //const int imageHeight = pitchContour.getHeight();
-        //Logger::getCurrentLogger()->writeToLog ("Paint");
-        //g.drawImageWithin(pitchContour, (width - imageWidth)/2, 0, imageWidth, imageHeight, RectanglePlacement::stretchToFit);
 
         // You can add your drawing code here!
     }
-    
-    /*
-    void drawNextPitchValue(float pitchInMidi)
-    {
-        const int imageWidth = pitchContour.getWidth()-1;
-        const int imageHeight = pitchContour.getHeight();
-        pitchContour.moveImageSection(0, 0, 1, 0, imageWidth, imageHeight);
-        int pitchInInt = (int)pitchInMidi;
-        const int pitchIndex = (pitchInInt - 48);
-        Logger::getCurrentLogger()->writeToLog (String(pitchIndex));
-        for (int y = pitchIndex*10; y < pitchIndex*10+10; y++)
-        {
-            pitchContour.setPixelAt(imageWidth, imageHeight-y, Colour (0xffff5c5c));
-        }
-        
-    }
-     */
     
     void resized() override
     {
@@ -193,7 +172,39 @@ private:
         //Logger::getCurrentLogger()->writeToLog ("Complete one write operation buffer" + String(i));
     }
     
-    void writeToFile(vector<float> channelDataAvg, int hopSize)
+    void writeDataToFile(vector<float> channelDataAvg, int bufferSize)
+    {
+        const File file(File::getSpecialLocation(File::userDocumentsDirectory).getChildFile("Audio.txt"));
+        FileOutputStream stream(file);
+        if (!stream.openedOk())
+        {
+            Logger::getCurrentLogger()->writeToLog ("Failed to open stream");
+        }
+        stream.setPosition(stream.getPosition());
+        String bufferData;
+        int i;
+        for (i=0; i < bufferSize; i++)
+        {
+            bufferData  = String(channelDataAvg[i]) + '\n';
+            stream.writeText(bufferData, false, false);
+        }
+        
+    }
+    
+    void writePitchToFile(float pitchOfFrame)
+    {
+        const File file(File::getSpecialLocation(File::userDocumentsDirectory).getChildFile("Pitch.txt"));
+        FileOutputStream stream(file);
+        if (!stream.openedOk())
+        {
+            Logger::getCurrentLogger()->writeToLog ("Failed to open stream");
+        }
+        stream.setPosition(stream.getPosition());
+        String pitchToWrite = String(pitchOfFrame) + '\n';
+        stream.writeText(pitchToWrite, false, false);
+    }
+    
+    void writeToFile(vector<float> channelDataAvg, int bufferSize)
     {
         const File file(File::getSpecialLocation(File::userDocumentsDirectory).getChildFile("Buffer.txt"));
         FileOutputStream stream(file);
@@ -204,7 +215,7 @@ private:
         stream.setPosition(stream.getPosition());
         String bufferData;
         int i;
-        for (i=0; i < hopSize; ++i)
+        for (i=0; i < bufferSize; ++i)
         {
             bufferData  = bufferData + String(channelDataAvg[i]) + " ";
         }

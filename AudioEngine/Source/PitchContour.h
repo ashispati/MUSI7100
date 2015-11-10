@@ -37,13 +37,6 @@ public:
 
     void paint (Graphics& g)
     {
-        /* This demo code just fills the component's background and
-           draws some placeholder text to get you started.
-
-           You should replace everything in this method with your own
-           drawing code..
-        */
-
         g.fillAll (Colours::white);   // clear the background
 
         g.setColour (Colours::grey);
@@ -61,9 +54,7 @@ public:
             g.drawLine(prevX, prevY, currX, currY);
             prevX = currX;
             prevY = currY;
-            //g.fillRect(i, yCoordinate ,1,1);
         }
-        g.fillRect(1,1,2,2);
         g.setFont (14.0f);
         g.drawText (String(pitchArray[lengthOfPitchArray-1]), getLocalBounds(),Justification::centred, true);   // draw some placeholder text
     }
@@ -82,9 +73,11 @@ public:
         // components that your component contains..
 
     }
+    
+    vector<float> pitchArray;
 
 private:
-    vector<float> pitchArray;
+    
     int lengthOfPitchArray;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PitchContour)
 };

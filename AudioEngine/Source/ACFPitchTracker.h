@@ -25,11 +25,13 @@ public:
         setWindowSize(1024);
         setSampleRate(44100);
         setMinFreqInHz(100);
-        setMaxFreqInHz(800);
-        setHammingCoeff();
+        setMaxFreqInHz(1000);
     }
     
 
+    
+    
+private:
     float findACFPitchInHZ(AudioSampleRingFrame* window) override
     {
         int readPosition = window->getReadPosition();
@@ -45,7 +47,6 @@ public:
             {
                 currentFrame[i] = window->getSample(0, (readPosition+i)%windowSize);
             }
-            hammingWeighting(currentFrame);
             vector<float> autoCorrArray = autoCorrelation(currentFrame);
             int peakLocation = findPeak(autoCorrArray);
             //Logger::getCurrentLogger()->writeToLog (String(peakLocation));
@@ -53,7 +54,6 @@ public:
         }
     }
     
-private:
     vector<float> smoothAutoCorr(vector<float> autoCorrArray)
     {
         int filterLen = 2;
@@ -86,7 +86,7 @@ private:
             autoCorrArray[delay] = dummy;
         }
         vector<float> smoothedAutoCorrArray = smoothAutoCorr(autoCorrArray);
-        return autoCorrArray;
+        return smoothedAutoCorrArray;
     }
     
     int maxIndexAutoCorr(vector<float> autoCorrArray, int startIndex, int endIndex)
