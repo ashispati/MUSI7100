@@ -49,7 +49,7 @@ public:
         float currX = 0;
         for(int i = 1; i < lengthOfPitchArray; i++)
         {
-            currY = 300 - 300*(pitchArray[i] - 0)/100;
+            currY = 300 - 300*(pitchArray[i] - 45)/65;
             currX = (float)i;
             g.drawLine(prevX, prevY, currX, currY);
             prevX = currX;

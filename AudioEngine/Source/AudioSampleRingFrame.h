@@ -82,7 +82,7 @@ public:
         {
             windowData  = windowData + String(getSample(0, (readPosition+i)%windowSize)) + " ";
         }
-        windowData = windowData + ";" + '\n';
+        windowData = windowData + '\n';
         stream.setPosition(stream.getPosition());
         stream.writeText(windowData, false, false);
         //Logger::getCurrentLogger()->writeToLog ("Complete one write operation frame" + String(i));

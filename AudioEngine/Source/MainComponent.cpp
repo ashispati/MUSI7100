@@ -42,9 +42,6 @@ public:
         pitchTracker->setWindowSize(windowSize);
         numBuffers = 0;
         channelDataAvg.begin();
-        
-        //Logger::getCurrentLogger()->writeToLog (String(window->getNumSamples()));
-        //writeFrameToFile(window, windowSize);
     }
 
     ~MainContentComponent()
@@ -97,7 +94,7 @@ public:
                 {
                     window->addNextBufferToFrame(channelDataAvg);
                     //writeToFile(channelDataAvg, hopSize);
-                    window->writeFrameToFile();
+                    //window->writeFrameToFile();
                     float midiPitchOfFrame = pitchTracker->findACFPitchMidi(window);
                     writePitchToFile(midiPitchOfFrame);
                     pitchContour.drawPitchTrack(midiPitchOfFrame);
@@ -167,7 +164,7 @@ private:
         {
             bufferData  = bufferData + String(channelDataAvg[i]) + " ";
         }
-        bufferData = bufferData + ";" + '\n';
+        bufferData = bufferData + '\n';
         stream.writeText(bufferData, false, false);
         //Logger::getCurrentLogger()->writeToLog ("Complete one write operation buffer" + String(i));
     }
@@ -219,7 +216,7 @@ private:
         {
             bufferData  = bufferData + String(channelDataAvg[i]) + " ";
         }
-        bufferData = bufferData + ";" + '\n';
+        bufferData = bufferData + '\n';
         stream.writeText(bufferData, false, false);
         //Logger::getCurrentLogger()->writeToLog ("Complete one write operation buffer" + String(i));
     }
