@@ -17,7 +17,7 @@
 #include <vector>
 using namespace std;
 
-class PitchContour    : public Component
+class PitchContour    : public Component, private Timer
 {
 public:
     PitchContour(): lengthOfPitchArray(390)
@@ -28,7 +28,7 @@ public:
         {
             pitchArray.push_back(0);
         }
-        Logger::getCurrentLogger()->writeToLog (String(pitchArray[lengthOfPitchArray-1]));
+        startTimerHz (60);
     }
 
     ~PitchContour()
@@ -49,7 +49,7 @@ public:
         float currX = 0;
         for(int i = 1; i < lengthOfPitchArray; i++)
         {
-            currY = 300 - 300*(pitchArray[i] - 45)/65;
+            currY = 300 - 300*(pitchArray[i] - 45)/36;
             currX = (float)i;
             g.drawLine(prevX, prevY, currX, currY);
             prevX = currX;
@@ -59,15 +59,28 @@ public:
         g.drawText (String(pitchArray[lengthOfPitchArray-1]), getLocalBounds(),Justification::centred, true);   // draw some placeholder text
     }
     
-    void drawPitchTrack(float pitchOfFrame)
+    void addNextPitch(float pitchOfFrame)
     {
-        const MessageManagerLock mmLock;
+        //const MessageManagerLock mmLock;
         pitchArray.erase(pitchArray.begin());
+        /*
+        for (int i = 0; i < 2; i++)
+        {
+            pitchOfFrame = pitchOfFrame + pitchArray[lengthOfPitchArray-i-2];
+        }
+        pitchOfFrame = pitchOfFrame/3;
+         */
         pitchArray.push_back(pitchOfFrame);
+        //Logger::getCurrentLogger()->writeToLog (String(pitchOfFrame));
+        //repaint();
+    }
+    
+    void timerCallback() override
+    {
         repaint();
     }
     
-    void resized()
+    void resized() override
     {
         // This method is where you should set the bounds of any child
         // components that your component contains..
@@ -79,6 +92,7 @@ public:
 private:
     
     int lengthOfPitchArray;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PitchContour)
 };
 

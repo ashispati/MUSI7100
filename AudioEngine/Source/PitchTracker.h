@@ -92,7 +92,7 @@ public:
     float findACFPitchMidi(AudioSampleRingFrame* window)
     {
         float pitchInHz = findACFPitchInHZ(window);
-        Logger::getCurrentLogger()->writeToLog (String(pitchInHz));
+        //Logger::getCurrentLogger()->writeToLog (String(pitchInHz));
         float midiPitch = 0;
         if (pitchInHz == 0)
         {

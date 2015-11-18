@@ -38,7 +38,7 @@ private:
         float currentFrame[windowSize];
         float rmsValue = window->rmsOfWindow();
         float energyWindow = rmsValue*rmsValue*windowSize;
-        if (rmsValue < 0.01)
+        if (rmsValue < 0.005)
         {
             pitchArrayInHz.push_back(0);
             return 0;
@@ -133,8 +133,8 @@ private:
             }
             else
             {
-                maxSearchInHz = pitchArrayInHz[size-1]*2 - 10;
-                minSearchInHz = pitchArrayInHz[size-1]/2 + 10;
+                maxSearchInHz = pitchArrayInHz[size-1]*2 - 20;
+                minSearchInHz = pitchArrayInHz[size-1]/2 + 20;
             }
         }
         
@@ -148,8 +148,8 @@ private:
         {
             maxOffsetSample = (int)sampleRate/minSearchInHz;
         }
-        Logger::getCurrentLogger()->writeToLog (String(minOffsetSample));
-        Logger::getCurrentLogger()->writeToLog (String(maxOffsetSample));
+        //Logger::getCurrentLogger()->writeToLog (String(minOffsetSample));
+        //Logger::getCurrentLogger()->writeToLog (String(maxOffsetSample));
 
         
         int numPeaks(0);

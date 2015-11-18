@@ -15,6 +15,7 @@
 #include "PitchTracker.h"
 #include "PitchContour.h"
 #include <vector>
+#include <iomanip>
 using namespace std;
 
 //==============================================================================
@@ -65,42 +66,51 @@ public:
 
     void getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill) override
     {
+        double start = Time::getMillisecondCounterHiRes();
         if(recordingStatus)
         {
             if (bufferToFill.buffer->getNumChannels() > 0)
             {
                 int bufferSize = bufferToFill.numSamples;
                 int hopSize = window->getHopSize();
-                
+                //Logger::getCurrentLogger()->writeToLog("Recording");
                 
                 const float* channelData1 = bufferToFill.buffer->getWritePointer (0, bufferToFill.startSample);
-                const float* channelData2 = bufferToFill.buffer->getWritePointer (1, bufferToFill.startSample); //check for num of channels
-                for(int i=0; i < bufferSize; i++)
+                //const float* channelData2 = bufferToFill.buffer->getWritePointer (1, bufferToFill.startSample); //check for num of channels
+                
+                for(int i = 0; i < bufferSize; i++)
                 {
-                    channelDataAvg.push_back((channelData1[i] + channelData2[i])/2);
+                    channelDataAvg.push_back(channelData1[i]);
                 }
                 /*
                 // code for testing the buffer and pitch tracker
                 for(int i = 0; i < bufferSize; i++)
                 {
-                    //float value = 0.5*sin(2*3.14159*441*(i+bufferSize*numBuffers)/44100);
-                    float value = i + numBuffers*bufferSize;
+                    float value = 0.5*sin(2*3.14159*441*(i+bufferSize*numBuffers)/44100);
+                    if (i == 0)
+                    {
+                        Logger::getCurrentLogger()->writeToLog(String(value));
+                    }
+                    //float value = i + numBuffers*bufferSize;
                     channelDataAvg.push_back(value);
                 }
                 */
                 writeDataToFile(channelDataAvg, bufferSize);
+                //writeDataToFileFromPointer(channelData1, bufferSize);
                 
                 while (channelDataAvg.size() >= hopSize)
                 {
                     window->addNextBufferToFrame(channelDataAvg);
-                    //writeToFile(channelDataAvg, hopSize);
                     //window->writeFrameToFile();
                     float midiPitchOfFrame = pitchTracker->findACFPitchMidi(window);
                     writePitchToFile(midiPitchOfFrame);
-                    pitchContour.drawPitchTrack(midiPitchOfFrame);
+                    pitchContour.addNextPitch(midiPitchOfFrame);
                     channelDataAvg.erase(channelDataAvg.begin(), channelDataAvg.begin()+hopSize);
                 }
-                
+            }
+            else
+            {
+                Logger::getCurrentLogger()->writeToLog("Error");
             }
             numBuffers = numBuffers + 1;
         }
@@ -110,6 +120,11 @@ public:
         }
         
         bufferToFill.clearActiveBufferRegion();
+        double duration = Time::getMillisecondCounterHiRes() - start;
+        if (duration > 11.6099773)
+        {
+            Logger::getCurrentLogger()->writeToLog ("Time Exceeded");
+        }
     }
 
     void releaseResources() override
@@ -180,9 +195,28 @@ private:
         stream.setPosition(stream.getPosition());
         String bufferData;
         int i;
-        for (i=0; i < bufferSize; i++)
+        for (i = 0; i < bufferSize; i++)
         {
             bufferData  = String(channelDataAvg[i]) + '\n';
+            stream.writeText(bufferData, false, false);
+        }
+        
+    }
+    
+    void writeDataToFileFromPointer(const float* channelData, int bufferSize)
+    {
+        const File file(File::getSpecialLocation(File::userDocumentsDirectory).getChildFile("AudioPointer.txt"));
+        FileOutputStream stream(file);
+        if (!stream.openedOk())
+        {
+            Logger::getCurrentLogger()->writeToLog ("Failed to open stream");
+        }
+        stream.setPosition(stream.getPosition());
+        String bufferData;
+        int i;
+        for (i = 0; i < bufferSize; i++)
+        {
+            bufferData  = String(channelData[i]) + '\n';
             stream.writeText(bufferData, false, false);
         }
         
