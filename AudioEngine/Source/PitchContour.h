@@ -14,13 +14,14 @@
 #include "AudioSampleRingFrame.h"
 #include "ACFPitchTracker.h"
 #include "PitchTracker.h"
+#include "PianoRoll.h"
 #include <vector>
 using namespace std;
 
 class PitchContour    : public Component, private Timer
 {
 public:
-    PitchContour(): lengthOfPitchArray(390)
+    PitchContour(): lengthOfPitchArray(1000), pitchesToPlot(500)
     {
         // In your constructor, you should add any child components, and
         // initialise any special settings that your component needs.
@@ -28,28 +29,27 @@ public:
         {
             pitchArray.push_back(0);
         }
-        startTimerHz (60);
+        pitchesToPlot = getWidth()/2;
+        startTimerHz (30);
     }
 
     ~PitchContour()
     {
     }
 
-    void paint (Graphics& g)
+    void paint (Graphics& g) override
     {
         g.fillAll (Colours::white);   // clear the background
-
         g.setColour (Colours::grey);
         g.drawRect (getLocalBounds(), 1);   // draw an outline around the component
-
         g.setColour (Colours::red);
-        float prevY = 300;
+        float prevY = getHeight();
         float prevX = 0;
-        float currY = 300;
+        float currY = getHeight();
         float currX = 0;
-        for(int i = 1; i < lengthOfPitchArray; i++)
+        for(int i = 0; i < pitchesToPlot; i++)
         {
-            currY = 300 - 300*(pitchArray[i] - 45)/36;
+            currY = getHeight() - getHeight()*(pitchArray[lengthOfPitchArray-pitchesToPlot+i] - 45)/36;
             currX = (float)i;
             g.drawLine(prevX, prevY, currX, currY);
             prevX = currX;
@@ -61,18 +61,9 @@ public:
     
     void addNextPitch(float pitchOfFrame)
     {
-        //const MessageManagerLock mmLock;
         pitchArray.erase(pitchArray.begin());
-        /*
-        for (int i = 0; i < 2; i++)
-        {
-            pitchOfFrame = pitchOfFrame + pitchArray[lengthOfPitchArray-i-2];
-        }
-        pitchOfFrame = pitchOfFrame/3;
-         */
         pitchArray.push_back(pitchOfFrame);
         //Logger::getCurrentLogger()->writeToLog (String(pitchOfFrame));
-        //repaint();
     }
     
     void timerCallback() override
@@ -82,16 +73,17 @@ public:
     
     void resized() override
     {
+        pitchesToPlot = getWidth()/2;
         // This method is where you should set the bounds of any child
         // components that your component contains..
-
     }
     
-    vector<float> pitchArray;
+    
 
 private:
-    
+    vector<float> pitchArray;
     int lengthOfPitchArray;
+    int pitchesToPlot;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PitchContour)
 };

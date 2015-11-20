@@ -313,6 +313,7 @@
 		508135BC6FEA945B0E15E351 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "juce_FileFilter.h"; path = "../../../Desktop/JUCE-OSX/modules/juce_core/files/juce_FileFilter.h"; sourceTree = "SOURCE_ROOT"; };
 		50BBAE758EC466A895E96EDA = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "juce_ImageCache.h"; path = "../../../Desktop/JUCE-OSX/modules/juce_graphics/images/juce_ImageCache.h"; sourceTree = "SOURCE_ROOT"; };
 		50D04B7D5F96EFBB694CC709 = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = "juce_freetype_Fonts.cpp"; path = "../../../Desktop/JUCE-OSX/modules/juce_graphics/native/juce_freetype_Fonts.cpp"; sourceTree = "SOURCE_ROOT"; };
+		512326D61C8FAF7E16FB7867 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = PianoRoll.h; path = ../../Source/PianoRoll.h; sourceTree = "SOURCE_ROOT"; };
 		5149EC8A005E29488EDDCDC8 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "juce_TopLevelWindow.h"; path = "../../../Desktop/JUCE-OSX/modules/juce_gui_basics/windows/juce_TopLevelWindow.h"; sourceTree = "SOURCE_ROOT"; };
 		517E31C1F8E6C42CB1189E34 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "juce_BufferingAudioSource.h"; path = "../../../Desktop/JUCE-OSX/modules/juce_audio_basics/sources/juce_BufferingAudioSource.h"; sourceTree = "SOURCE_ROOT"; };
 		51B9268FF9B083F817F430BA = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "juce_TextPropertyComponent.h"; path = "../../../Desktop/JUCE-OSX/modules/juce_gui_basics/properties/juce_TextPropertyComponent.h"; sourceTree = "SOURCE_ROOT"; };
@@ -932,6 +933,7 @@
 		FF52323DA22D08B403A03FE4 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "juce_SparseSet.h"; path = "../../../Desktop/JUCE-OSX/modules/juce_core/containers/juce_SparseSet.h"; sourceTree = "SOURCE_ROOT"; };
 		FFB37AB001E67273568E772D = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "juce_LinkedListPointer.h"; path = "../../../Desktop/JUCE-OSX/modules/juce_core/containers/juce_LinkedListPointer.h"; sourceTree = "SOURCE_ROOT"; };
 		7B8D6AD14B9A78F3A7AA1FC8 = {isa = PBXGroup; children = (
+					512326D61C8FAF7E16FB7867,
 					D15C41ED1416A0FEFD58B285,
 					73128082669016BA4902D192,
 					6C8A10220DC92F126D8B450D,

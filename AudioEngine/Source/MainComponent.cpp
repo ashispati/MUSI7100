@@ -14,6 +14,7 @@
 #include "ACFPitchTracker.h"
 #include "PitchTracker.h"
 #include "PitchContour.h"
+#include "PianoRoll.h"
 #include <vector>
 #include <iomanip>
 using namespace std;
@@ -32,6 +33,7 @@ public:
         setSize (800, 400);
         setAudioChannels (2, 0);
         addAndMakeVisible(pitchContour);
+        addAndMakeVisible(pianoRoll);
         recordButton.setColour (TextButton::buttonColourId, Colour (0xffff5c5c));
         recordButton.setColour (TextButton::textColourOnId, Colours::black);
         recordButton.setButtonText ("Start");
@@ -95,7 +97,7 @@ public:
                     channelDataAvg.push_back(value);
                 }
                 */
-                writeDataToFile(channelDataAvg, bufferSize);
+                //writeDataToFile(channelDataAvg, bufferSize);
                 //writeDataToFileFromPointer(channelData1, bufferSize);
                 
                 while (channelDataAvg.size() >= hopSize)
@@ -103,7 +105,7 @@ public:
                     window->addNextBufferToFrame(channelDataAvg);
                     //window->writeFrameToFile();
                     float midiPitchOfFrame = pitchTracker->findACFPitchMidi(window);
-                    writePitchToFile(midiPitchOfFrame);
+                    //writePitchToFile(midiPitchOfFrame);
                     pitchContour.addNextPitch(midiPitchOfFrame);
                     channelDataAvg.erase(channelDataAvg.begin(), channelDataAvg.begin()+hopSize);
                 }
@@ -121,6 +123,7 @@ public:
         
         bufferToFill.clearActiveBufferRegion();
         double duration = Time::getMillisecondCounterHiRes() - start;
+        //cout << duration << endl;
         if (duration > 11.6099773)
         {
             Logger::getCurrentLogger()->writeToLog ("Time Exceeded");
@@ -142,12 +145,17 @@ public:
     
     void resized() override
     {
-        int width = 40;
-        int height = 20;
+        int buttonWidth = getWidth()/20;
+        int buttonHeight = getHeight()/30;
         int posx = getWidth()/2;
         int posy = getHeight()-10;
-        recordButton.setBounds(posx-20, posy-20, width, height);
-        pitchContour.setBounds(20, 20, posx*2-40, posy-50);
+        int offSetX1 = getWidth()/40;
+        int offSetY1 = getHeight()/30;
+        int widthPianoRoll = getWidth()/16;
+        int offSetY2 = getHeight()/12;
+        recordButton.setBounds(posx-offSetX1, posy-offSetY1, buttonWidth, buttonHeight);
+        pianoRoll.setBounds(offSetX1, offSetY1, widthPianoRoll, posy-offSetY2);
+        pitchContour.setBounds(2*offSetX1, offSetY1, posx*2-4*offSetX1, posy-offSetY2);
     }
 
 
@@ -161,6 +169,7 @@ private:
     double sampleRateInputAudio;
     int numBuffers;
     vector<float> channelDataAvg;
+    PianoRoll pianoRoll;
    
 
     

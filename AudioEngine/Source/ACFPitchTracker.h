@@ -133,8 +133,8 @@ private:
             }
             else
             {
-                maxSearchInHz = pitchArrayInHz[size-1]*2 - 20;
-                minSearchInHz = pitchArrayInHz[size-1]/2 + 20;
+                maxSearchInHz = pitchArrayInHz[size-1]*2;
+                minSearchInHz = pitchArrayInHz[size-1]/2;
             }
         }
         
