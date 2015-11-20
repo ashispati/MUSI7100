@@ -88,11 +88,7 @@ public:
                 // code for testing the buffer and pitch tracker
                 for(int i = 0; i < bufferSize; i++)
                 {
-                    float value = 0.5*sin(2*3.14159*441*(i+bufferSize*numBuffers)/44100);
-                    if (i == 0)
-                    {
-                        Logger::getCurrentLogger()->writeToLog(String(value));
-                    }
+                    float value = 0.5*sin(2*3.14159*146.83*(i+bufferSize*numBuffers)/44100);
                     //float value = i + numBuffers*bufferSize;
                     channelDataAvg.push_back(value);
                 }
@@ -107,6 +103,7 @@ public:
                     float midiPitchOfFrame = pitchTracker->findACFPitchMidi(window);
                     //writePitchToFile(midiPitchOfFrame);
                     pitchContour.addNextPitch(midiPitchOfFrame);
+                    pianoRoll.setCurrentQuantizedPitch(pitchTracker->quantizeMidiPitch(midiPitchOfFrame));
                     channelDataAvg.erase(channelDataAvg.begin(), channelDataAvg.begin()+hopSize);
                 }
             }
@@ -146,7 +143,7 @@ public:
     void resized() override
     {
         int buttonWidth = getWidth()/20;
-        int buttonHeight = getHeight()/30;
+        int buttonHeight = getHeight()/20;
         int posx = getWidth()/2;
         int posy = getHeight()-10;
         int offSetX1 = getWidth()/40;

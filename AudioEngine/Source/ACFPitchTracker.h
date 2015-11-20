@@ -51,7 +51,6 @@ private:
             }
             vector<float> autoCorrArray = autoCorrelation(currentFrame, energyWindow);
             int peakLocation = findPeak(autoCorrArray);
-            //Logger::getCurrentLogger()->writeToLog (String(peakLocation));
             float pitchInHz = float(sampleRate)/float(peakLocation);
             pitchArrayInHz.push_back(pitchInHz);
             return pitchInHz;
@@ -93,8 +92,6 @@ private:
             autoCorrArray[delay] = dummy/energyWindow;
         }
         vector<float> smoothedAutoCorrArray = smoothAutoCorr(autoCorrArray);
-        //writeFrameToFile(autoCorrArray, "autoCorr");
-        //writeFrameToFile(autoCorrArray, "smoothedAutoCorr");
         return smoothedAutoCorrArray;
     }
     
@@ -148,8 +145,6 @@ private:
         {
             maxOffsetSample = (int)sampleRate/minSearchInHz;
         }
-        //Logger::getCurrentLogger()->writeToLog (String(minOffsetSample));
-        //Logger::getCurrentLogger()->writeToLog (String(maxOffsetSample));
 
         
         int numPeaks(0);
@@ -210,7 +205,6 @@ private:
         autoCorrData = autoCorrData + '\n';
         stream.setPosition(stream.getPosition());
         stream.writeText(autoCorrData, false, false);
-        //Logger::getCurrentLogger()->writeToLog ("Complete one write operation frame" + String(i));
     }
 };
 

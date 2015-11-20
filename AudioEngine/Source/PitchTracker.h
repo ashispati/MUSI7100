@@ -92,7 +92,6 @@ public:
     float findACFPitchMidi(AudioSampleRingFrame* window)
     {
         float pitchInHz = findACFPitchInHZ(window);
-        //Logger::getCurrentLogger()->writeToLog (String(pitchInHz));
         float midiPitch = 0;
         if (pitchInHz == 0)
         {
@@ -104,8 +103,13 @@ public:
         }
         midiPitchArray.push_back(midiPitch);
         //midiPitch = movingAverageFilter(midiPitch);
-        //Logger::getCurrentLogger()->writeToLog (String(midiPitch));
         return midiPitch;
+    }
+    
+    int quantizeMidiPitch(float pitchInMidi)
+    {
+        int pitchValue = (int)round(pitchInMidi);
+        return pitchValue;
     }
     
     
