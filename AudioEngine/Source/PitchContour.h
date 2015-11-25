@@ -23,8 +23,6 @@ class PitchContour    : public Component, private Timer
 public:
     PitchContour(): lengthOfPitchArray(1000), pitchesToPlot(500)
     {
-        // In your constructor, you should add any child components, and
-        // initialise any special settings that your component needs.
         for(int i = 0; i < lengthOfPitchArray; i++)
         {
             pitchArray.push_back(0);
@@ -32,6 +30,8 @@ public:
         pitchesToPlot = getWidth()/2;
         startTimerHz (30);
     }
+    
+    
 
     ~PitchContour()
     {

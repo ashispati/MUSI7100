@@ -5,6 +5,13 @@
               jucerVersion="3.2.0">
   <MAINGROUP id="bWYqtX" name="AudioEngine">
     <GROUP id="{F0B6C9AF-6F87-181D-1CEA-A73A98D8E8B2}" name="Source">
+      <FILE id="Ev5LPb" name="AudioEngine.h" compile="0" resource="0" file="Source/AudioEngine.h"/>
+      <FILE id="ujqpui" name="MetronomeTimer.h" compile="0" resource="0"
+            file="Source/MetronomeTimer.h"/>
+      <FILE id="CgfxFV" name="LessonManager.h" compile="0" resource="0" file="Source/LessonManager.h"/>
+      <FILE id="ZmOw7e" name="HomeScreen.h" compile="0" resource="0" file="Source/HomeScreen.h"/>
+      <FILE id="qWx95i" name="VocalEvaluation.h" compile="0" resource="0"
+            file="Source/VocalEvaluation.h"/>
       <FILE id="dClMKg" name="PianoRoll.h" compile="0" resource="0" file="Source/PianoRoll.h"/>
       <FILE id="SPs00T" name="PitchContour.h" compile="0" resource="0" file="Source/PitchContour.h"/>
       <FILE id="FwXzy7" name="ACFPitchTracker.h" compile="0" resource="0"

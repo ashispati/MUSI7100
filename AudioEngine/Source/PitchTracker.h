@@ -18,9 +18,12 @@ using namespace std;
 class PitchTracker
 {
 public:
-    PitchTracker() : sampleRate(44100), windowSize(1024), minFreqInHz(100), maxFreqInHz(600)
+    PitchTracker()
     {
-        setHammingCoeff();
+    }
+    
+    virtual ~PitchTracker()
+    {
     }
     
     int getSampleRate()
@@ -69,26 +72,6 @@ public:
         return midiPitchArray.size();
     }
     
-    float movingAverageFilter(float midiPitch)
-    {
-        int filterLen = 10;
-        if (midiPitchArray.size() >= filterLen-1)
-        {
-            for (int i = 0; i < filterLen-1; i++)
-            {
-                midiPitch = midiPitch + midiPitchArray[midiPitchArray.size()-i];
-            }
-            midiPitch = midiPitch/filterLen;
-            return midiPitch;
-        }
-        else
-        {
-            midiPitchArray.push_back(midiPitch);
-            return midiPitch;
-        }
-    }
-    
-    
     float findACFPitchMidi(AudioSampleRingFrame* window)
     {
         float pitchInHz = findACFPitchInHZ(window);
@@ -102,7 +85,6 @@ public:
             midiPitch = 69 + 12*log(pitchInHz/440)/log(2);
         }
         midiPitchArray.push_back(midiPitch);
-        //midiPitch = movingAverageFilter(midiPitch);
         return midiPitch;
     }
     

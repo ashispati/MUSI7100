@@ -8,13 +8,17 @@
 
 #ifndef MAINCOMPONENT_H_INCLUDED
 #define MAINCOMPONENT_H_INCLUDED
-
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "AudioSampleRingFrame.h"
 #include "ACFPitchTracker.h"
 #include "PitchTracker.h"
 #include "PitchContour.h"
 #include "PianoRoll.h"
+#include "LessonManager.h"
+#include "HomeScreen.h"
+#include "VocalEvaluation.h"
+#include "MetronomeTimer.h"
+#include "AudioEngine.h"
 #include <vector>
 #include <iomanip>
 using namespace std;
@@ -24,112 +28,26 @@ using namespace std;
     This component lives inside our window, and this is where you should put all
     your controls and content.
 */
-class MainContentComponent   : public AudioAppComponent, public Button::Listener
+class MainContentComponent   : public Component, public Button::Listener
 {
 public:
     //==============================================================================
-    MainContentComponent() : windowSize(1024),recordingStatus(false)
+    MainContentComponent() : windowSize(1024)
     {
         setSize (800, 400);
-        setAudioChannels (2, 0);
         addAndMakeVisible(pitchContour);
         addAndMakeVisible(pianoRoll);
+        audioEngine.setRefereces(&pitchContour, &pianoRoll);
         recordButton.setColour (TextButton::buttonColourId, Colour (0xffff5c5c));
         recordButton.setColour (TextButton::textColourOnId, Colours::black);
         recordButton.setButtonText ("Start");
         recordButton.addListener(this);
         addAndMakeVisible(recordButton);
-        window = new AudioSampleRingFrame(windowSize);
-        pitchTracker = new ACFPitchTracker();
-        pitchTracker->setSampleRate(sampleRateInputAudio);
-        pitchTracker->setWindowSize(windowSize);
-        numBuffers = 0;
-        channelDataAvg.begin();
     }
 
     ~MainContentComponent()
     {
         recordButton.removeListener(this);
-        delete window;
-        delete pitchTracker;
-        shutdownAudio();
-    }
-
-    //=======================================================================
-    void prepareToPlay (int samplesPerBlockExpected, double sampleRate) override
-    {
-        String message;
-        message << "Preparing to play audio...\n";
-        message << " samplesPerBlockExpected = " << samplesPerBlockExpected << "\n";
-        message << " sampleRate = " << sampleRate;
-        sampleRateInputAudio = sampleRate;
-        Logger::getCurrentLogger()->writeToLog (message);
-    }
-
-    void getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill) override
-    {
-        double start = Time::getMillisecondCounterHiRes();
-        if(recordingStatus)
-        {
-            if (bufferToFill.buffer->getNumChannels() > 0)
-            {
-                int bufferSize = bufferToFill.numSamples;
-                int hopSize = window->getHopSize();
-                //Logger::getCurrentLogger()->writeToLog("Recording");
-                
-                const float* channelData1 = bufferToFill.buffer->getWritePointer (0, bufferToFill.startSample);
-                //const float* channelData2 = bufferToFill.buffer->getWritePointer (1, bufferToFill.startSample); //check for num of channels
-                
-                for(int i = 0; i < bufferSize; i++)
-                {
-                    channelDataAvg.push_back(channelData1[i]);
-                }
-                /*
-                // code for testing the buffer and pitch tracker
-                for(int i = 0; i < bufferSize; i++)
-                {
-                    float value = 0.5*sin(2*3.14159*146.83*(i+bufferSize*numBuffers)/44100);
-                    //float value = i + numBuffers*bufferSize;
-                    channelDataAvg.push_back(value);
-                }
-                */
-                //writeDataToFile(channelDataAvg, bufferSize);
-                //writeDataToFileFromPointer(channelData1, bufferSize);
-                
-                while (channelDataAvg.size() >= hopSize)
-                {
-                    window->addNextBufferToFrame(channelDataAvg);
-                    //window->writeFrameToFile();
-                    float midiPitchOfFrame = pitchTracker->findACFPitchMidi(window);
-                    //writePitchToFile(midiPitchOfFrame);
-                    pitchContour.addNextPitch(midiPitchOfFrame);
-                    pianoRoll.setCurrentQuantizedPitch(pitchTracker->quantizeMidiPitch(midiPitchOfFrame));
-                    channelDataAvg.erase(channelDataAvg.begin(), channelDataAvg.begin()+hopSize);
-                }
-            }
-            else
-            {
-                Logger::getCurrentLogger()->writeToLog("Error");
-            }
-            numBuffers = numBuffers + 1;
-        }
-        else
-        {
-            numBuffers = 0;
-        }
-        
-        bufferToFill.clearActiveBufferRegion();
-        double duration = Time::getMillisecondCounterHiRes() - start;
-        //cout << duration << endl;
-        if (duration > 11.6099773)
-        {
-            Logger::getCurrentLogger()->writeToLog ("Time Exceeded");
-        }
-    }
-
-    void releaseResources() override
-    {
-        Logger::getCurrentLogger()->writeToLog ("Releasing audio resources");
     }
 
     //=======================================================================
@@ -159,107 +77,10 @@ public:
 private:
     TextButton recordButton;
     const int windowSize;
-    bool recordingStatus;
-    AudioSampleRingFrame* window;
-    ACFPitchTracker* pitchTracker;
+    AudioEngine audioEngine;
     PitchContour pitchContour;
-    double sampleRateInputAudio;
-    int numBuffers;
-    vector<float> channelDataAvg;
     PianoRoll pianoRoll;
-   
-
     
-    void writeToFile(float channelDataAvg[], int hopSize)
-    {
-        const File file(File::getSpecialLocation(File::userDocumentsDirectory).getChildFile("Buffer.txt"));
-        FileOutputStream stream(file);
-        if (!stream.openedOk())
-        {
-            Logger::getCurrentLogger()->writeToLog ("Failed to open stream");
-        }
-        stream.setPosition(stream.getPosition());
-        String bufferData;
-        int i;
-        for (i=0; i < hopSize; ++i)
-        {
-            bufferData  = bufferData + String(channelDataAvg[i]) + " ";
-        }
-        bufferData = bufferData + '\n';
-        stream.writeText(bufferData, false, false);
-        //Logger::getCurrentLogger()->writeToLog ("Complete one write operation buffer" + String(i));
-    }
-    
-    void writeDataToFile(vector<float> channelDataAvg, int bufferSize)
-    {
-        const File file(File::getSpecialLocation(File::userDocumentsDirectory).getChildFile("Audio.txt"));
-        FileOutputStream stream(file);
-        if (!stream.openedOk())
-        {
-            Logger::getCurrentLogger()->writeToLog ("Failed to open stream");
-        }
-        stream.setPosition(stream.getPosition());
-        String bufferData;
-        int i;
-        for (i = 0; i < bufferSize; i++)
-        {
-            bufferData  = String(channelDataAvg[i]) + '\n';
-            stream.writeText(bufferData, false, false);
-        }
-        
-    }
-    
-    void writeDataToFileFromPointer(const float* channelData, int bufferSize)
-    {
-        const File file(File::getSpecialLocation(File::userDocumentsDirectory).getChildFile("AudioPointer.txt"));
-        FileOutputStream stream(file);
-        if (!stream.openedOk())
-        {
-            Logger::getCurrentLogger()->writeToLog ("Failed to open stream");
-        }
-        stream.setPosition(stream.getPosition());
-        String bufferData;
-        int i;
-        for (i = 0; i < bufferSize; i++)
-        {
-            bufferData  = String(channelData[i]) + '\n';
-            stream.writeText(bufferData, false, false);
-        }
-        
-    }
-    
-    void writePitchToFile(float pitchOfFrame)
-    {
-        const File file(File::getSpecialLocation(File::userDocumentsDirectory).getChildFile("Pitch.txt"));
-        FileOutputStream stream(file);
-        if (!stream.openedOk())
-        {
-            Logger::getCurrentLogger()->writeToLog ("Failed to open stream");
-        }
-        stream.setPosition(stream.getPosition());
-        String pitchToWrite = String(pitchOfFrame) + '\n';
-        stream.writeText(pitchToWrite, false, false);
-    }
-    
-    void writeToFile(vector<float> channelDataAvg, int bufferSize)
-    {
-        const File file(File::getSpecialLocation(File::userDocumentsDirectory).getChildFile("Buffer.txt"));
-        FileOutputStream stream(file);
-        if (!stream.openedOk())
-        {
-            Logger::getCurrentLogger()->writeToLog ("Failed to open stream");
-        }
-        stream.setPosition(stream.getPosition());
-        String bufferData;
-        int i;
-        for (i=0; i < bufferSize; ++i)
-        {
-            bufferData  = bufferData + String(channelDataAvg[i]) + " ";
-        }
-        bufferData = bufferData + '\n';
-        stream.writeText(bufferData, false, false);
-        //Logger::getCurrentLogger()->writeToLog ("Complete one write operation buffer" + String(i));
-    }
     
     void startRecording()
     {
@@ -275,15 +96,15 @@ private:
     {
         if (button == &recordButton)
         {
-            if (recordingStatus == true)
+            if (audioEngine.getRecordingStatus() == true)
             {
                 stopRecording();
-                recordingStatus = false;
+                audioEngine.setRecordingStatus(false);
             }
             else
             {
                 startRecording();
-                recordingStatus = true;
+                audioEngine.setRecordingStatus(true);
             }
         }
     }

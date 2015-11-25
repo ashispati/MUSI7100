@@ -14,7 +14,6 @@
 #include "AudioSampleRingFrame.h"
 #include "PitchTracker.h"
 #include <vector>
-
 using namespace std;
 
 class ACFPitchTracker: public PitchTracker
@@ -28,8 +27,9 @@ public:
         setMaxFreqInHz(1000);
     }
     
-
-    
+    ~ACFPitchTracker()
+    {
+    }
     
 private:
     float findACFPitchInHZ(AudioSampleRingFrame* window) override
@@ -115,7 +115,7 @@ private:
         int maxSearchInHz = 0;
         int minSearchInHz = 0;
         int size = pitchArrayInHz.size();
-        
+
         if (size == 0)
         {
             maxSearchInHz = maxFreqInHz;
@@ -134,7 +134,6 @@ private:
                 minSearchInHz = pitchArrayInHz[size-1]/2;
             }
         }
-        
         int minOffsetSample = sampleRate/maxFreqInHz;
         int maxOffsetSample = sampleRate/minFreqInHz;
         if (maxFreqInHz > maxSearchInHz)

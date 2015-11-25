@@ -31,7 +31,6 @@ public:
 
     void addNextBufferToFrame(vector<float> channelDataAvg)
     {
-        //Logger::getCurrentLogger()->writeToLog (String(writePosition));
         for (int i = 0; i < hopSize; i++)
         {
             setSample(0, i+writePosition, channelDataAvg[i]);
@@ -68,49 +67,6 @@ public:
         return rms;
     }
     
-    void writeFrameToFile()
-    {
-        const File file(File::getSpecialLocation(File::userDocumentsDirectory).getChildFile("Frame.txt"));
-        FileOutputStream stream(file);
-        if (!stream.openedOk())
-        {
-            Logger::getCurrentLogger()->writeToLog ("Failed to open stream");
-        }
-        String windowData;
-        int i;
-        for (i=0; i < windowSize; ++i)
-        {
-            windowData  = windowData + String(getSample(0, (readPosition+i)%windowSize)) + " ";
-        }
-        windowData = windowData + '\n';
-        stream.setPosition(stream.getPosition());
-        stream.writeText(windowData, false, false);
-        //Logger::getCurrentLogger()->writeToLog ("Complete one write operation frame" + String(i));
-    }
-    
-    /*
-    float getMean()
-    {
-        float mean(0);
-        for (int i = 0; i < windowSize; i++)
-        {
-            mean = mean + getSample(0, i);
-        }
-        mean = mean/windowSize;
-        return mean;
-    }
-    
-    void removeDCOffset()
-    {
-        float mean = getMean();
-        for (int i = 0; i < windowSize; i++)
-        {
-            setSample(0, i, getSample(0, i) - mean);
-        }
-        
-    }
-    */
-    
 private:
     const int windowSize;
     const int hopSize;
@@ -121,7 +77,6 @@ private:
     {
         readPosition = (readPosition + hopSize) % windowSize;
         return readPosition;
-        
     }
     
 };
