@@ -31,8 +31,6 @@ public:
         startTimerHz (30);
     }
     
-    
-
     ~PitchContour()
     {
     }
@@ -78,6 +76,13 @@ public:
         // components that your component contains..
     }
     
+    void clear()
+    {
+        for(int i = 0; i < lengthOfPitchArray; i++)
+        {
+            pitchArray[i] = 0;
+        }
+    }
     
 
 private:

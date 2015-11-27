@@ -163,6 +163,11 @@ public:
 
     }
     
+    void clear()
+    {
+        currentQuantizedPitch = 0;
+    }
+    
 private:
     int numWhiteKeys;
     int numBlackKeys;

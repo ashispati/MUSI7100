@@ -148,6 +148,11 @@ public:
     {
         return recordingStatus;
     }
+        
+    void clear()
+    {
+        pitchTracker->clear();
+    }
     
 private:
     AudioDeviceManager deviceManager;

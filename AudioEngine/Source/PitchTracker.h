@@ -94,6 +94,11 @@ public:
         return pitchValue;
     }
     
+    void clear()
+    {
+        midiPitchArray.clear();
+        pitchArrayInHz.clear();
+    }
     
 protected:
     int sampleRate;

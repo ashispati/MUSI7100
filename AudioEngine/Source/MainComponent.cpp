@@ -38,22 +38,32 @@ public:
         addAndMakeVisible(pitchContour);
         addAndMakeVisible(pianoRoll);
         audioEngine.setRefereces(&pitchContour, &pianoRoll);
-        recordButton.setColour (TextButton::buttonColourId, Colour (0xffff5c5c));
+        
+        recordButton.setColour (TextButton::buttonColourId, Colours::lightgreen );
         recordButton.setColour (TextButton::textColourOnId, Colours::black);
-        recordButton.setButtonText ("Start");
+        recordButton.setButtonText ("Record");
         recordButton.addListener(this);
         addAndMakeVisible(recordButton);
+        
+        backButton.setColour (TextButton::buttonColourId, Colours::lightgrey );
+        backButton.setColour (TextButton::textColourOnId, Colours::black);
+        backButton.setButtonText ("Back");
+        backButton.addListener(this);
+        addAndMakeVisible(backButton);
+        
+        addAndMakeVisible(homeScreen);
     }
 
     ~MainContentComponent()
     {
         recordButton.removeListener(this);
+        backButton.removeListener(this);
     }
 
     //=======================================================================
     void paint (Graphics& g) override
     {
-        g.fillAll (Colours::black);
+        g.fillAll (Colours::white);
 
         // You can add your drawing code here!
     }
@@ -62,34 +72,43 @@ public:
     {
         int buttonWidth = getWidth()/20;
         int buttonHeight = getHeight()/20;
-        int posx = getWidth()/2;
-        int posy = getHeight()-10;
         int offSetX1 = getWidth()/40;
         int offSetY1 = getHeight()/30;
+        int posx = getWidth()/2;
+        int posy = getHeight()-offSetY1;
         int widthPianoRoll = getWidth()/16;
         int offSetY2 = getHeight()/12;
-        recordButton.setBounds(posx-offSetX1, posy-offSetY1, buttonWidth, buttonHeight);
+        recordButton.setBounds(posx-offSetX1, posy-offSetY1, 1.5*buttonWidth, buttonHeight);
+        backButton.setBounds(offSetX1, posy-offSetY1, buttonWidth, buttonHeight);
         pianoRoll.setBounds(offSetX1, offSetY1, widthPianoRoll, posy-offSetY2);
         pitchContour.setBounds(2*offSetX1, offSetY1, posx*2-4*offSetX1, posy-offSetY2);
+        homeScreen.setBounds(getLocalBounds());
     }
-
+    
+    void setHomeScreenStatus(bool status)
+    {
+        
+    }
 
 private:
     TextButton recordButton;
-    const int windowSize;
+    TextButton backButton;
     AudioEngine audioEngine;
     PitchContour pitchContour;
     PianoRoll pianoRoll;
-    
+    HomeScreen homeScreen;
+    const int windowSize;
     
     void startRecording()
     {
+        recordButton.setColour (TextButton::buttonColourId, Colour (0xffff5c5c));
         recordButton.setButtonText ("Stop");
     }
     
     void stopRecording()
     {
-        recordButton.setButtonText ("Start");
+        recordButton.setColour (TextButton::buttonColourId, Colours::lightgreen );
+        recordButton.setButtonText ("Record");
     }
     
     void buttonClicked (Button* button) override
@@ -106,6 +125,14 @@ private:
                 startRecording();
                 audioEngine.setRecordingStatus(true);
             }
+        }
+        if (button == &backButton)
+        {
+            homeScreen.setVisible(true);
+            homeScreen.setHomeScreenStatus(true);
+            pitchContour.clear();
+            pianoRoll.clear();
+            audioEngine.clear();
         }
     }
     
