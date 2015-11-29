@@ -134,6 +134,7 @@ private:
                 minSearchInHz = pitchArrayInHz[size-1]/2;
             }
         }
+        //Logger::getCurrentLogger()->writeToLog(String(sampleRate));
         int minOffsetSample = sampleRate/maxFreqInHz;
         int maxOffsetSample = sampleRate/minFreqInHz;
         if (maxFreqInHz > maxSearchInHz)

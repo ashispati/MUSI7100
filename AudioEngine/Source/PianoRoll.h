@@ -70,7 +70,7 @@ public:
         
         if (currentQuantizedPitch >= 45 && currentQuantizedPitch < 81)
         {
-            Logger::getCurrentLogger()->writeToLog (String(currentQuantizedPitch));
+            //Logger::getCurrentLogger()->writeToLog (String(currentQuantizedPitch));
             int scaledPitch = currentQuantizedPitch - 45;
             div_t divresult = div(scaledPitch,12);
             int octaveNumber = divresult.quot;

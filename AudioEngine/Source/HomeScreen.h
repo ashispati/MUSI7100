@@ -22,36 +22,34 @@
 class HomeScreen    : public Component, public Button::Listener, public ComboBox::Listener
 {
 public:
-    HomeScreen(): isHomeScreenActive(true)
+    HomeScreen(LessonManager& lessonManager):
+        _lessonManager(lessonManager),
+        _isHomeScreenActive(true)
     {
-        addAndMakeVisible(groupComponent);
-        groupComponent.setColour(GroupComponent::textColourId, Colour (0xffff5c5c));
-        groupComponent.setText("Vocal Performance Evaluator");
-        groupComponent.setTextLabelPosition(Justification::centredTop);
+        addAndMakeVisible(_groupComponent);
+        _groupComponent.setColour(GroupComponent::textColourId, Colour (0xffff5c5c));
+        _groupComponent.setText("Vocal Performance Evaluator");
+        _groupComponent.setTextLabelPosition(Justification::centredTop);
         
-        addAndMakeVisible(comboBox);
-        comboBox.setEditableText(false);
-        comboBox.setText("Choose Lesson");
-        comboBox.setJustificationType(Justification::centred);
-        comboBox.setTextWhenNothingSelected(String::empty);
-        comboBox.setTextWhenNoChoicesAvailable("no choices");
-        for (int i = 1; i <= 3; i++)
-        {
-            comboBox.addItem("Item", i);
-        }
-        comboBox.addListener(this);
+        addAndMakeVisible(_comboBox);
+        _comboBox.setEditableText(false);
+        _comboBox.setText("Choose Lesson");
+        _comboBox.setJustificationType(Justification::centred);
+        _comboBox.setTextWhenNothingSelected(String::empty);
+        _comboBox.setTextWhenNoChoicesAvailable("no choices");
+        _comboBox.addListener(this);
         
-        goButton.setColour (TextButton::buttonColourId, Colours::lightgreen);
-        goButton.setColour (TextButton::textColourOnId, Colours::black);
-        goButton.setButtonText ("Go");
-        goButton.addListener(this);
-        addAndMakeVisible(goButton);
+        _goButton.setColour (TextButton::buttonColourId, Colours::lightgreen);
+        _goButton.setColour (TextButton::textColourOnId, Colours::black);
+        _goButton.setButtonText ("Go");
+        _goButton.addListener(this);
+        addAndMakeVisible(_goButton);
     }
 
     ~HomeScreen()
     {
-        comboBox.removeListener(this);
-        goButton.removeListener(this);
+        _comboBox.removeListener(this);
+        _goButton.removeListener(this);
     }
 
     void paint (Graphics& g) override
@@ -63,16 +61,16 @@ public:
     {
         int width = getWidth();
         int height = getHeight();
-        int offsetX = width/40;
+        //int offsetX = width/40;
         int offsetY = height/20;
         int widthOfComboBox = width/5;
         int heightOfComboBox = height/20;
-        comboBox.setBounds(width/2 - widthOfComboBox/2, height/2-offsetY, widthOfComboBox, heightOfComboBox);
+        _comboBox.setBounds(width/2 - widthOfComboBox/2, height/2-offsetY, widthOfComboBox, heightOfComboBox);
         
         
         int widthOfGroupComponent = width/3;
         int heightOfGroupComponent = height/20;
-        groupComponent.setBounds(width/2 - widthOfGroupComponent/2, offsetY, widthOfGroupComponent, heightOfGroupComponent );
+        _groupComponent.setBounds(width/2 - widthOfGroupComponent/2, offsetY, widthOfGroupComponent, heightOfGroupComponent );
         
         int buttonWidth = width/20;
         int buttonHeight = height/20;
@@ -80,14 +78,14 @@ public:
         int offSetY1 = getHeight()/10;
         int posx = width/2;
         int posy = height/2;
-        goButton.setBounds(posx-offSetX1, posy+offSetY1, buttonWidth, buttonHeight);
+        _goButton.setBounds(posx-offSetX1, posy+offSetY1, buttonWidth, buttonHeight);
     }
 
     void buttonClicked (Button* button) override
     {
-        if (button == &goButton)
+        if (button == &_goButton)
         {
-            if (comboBox.getSelectedId() > 0)
+            if (_comboBox.getSelectedId() > 0)
             {
                 setVisible(false);
                 setHomeScreenStatus(false);
@@ -98,27 +96,38 @@ public:
     
     void comboBoxChanged(ComboBox* comboBoxThatHasChanged) override
     {
-        if (comboBoxThatHasChanged == &comboBox)
+        if (comboBoxThatHasChanged == &_comboBox)
         {
-            for (int i = 0; i < comboBox.getNumItems(); i++)
-            if (comboBox.getSelectedItemIndex() == i  )
+            for (int i = 0; i < _comboBox.getNumItems(); i++)
+            if (_comboBox.getSelectedItemIndex() == i  )
             {
-                
-                Logger::getCurrentLogger()->writeToLog(String(i));
+                _lessonManager.setLesson(i+1);
             }
         }
     }
     
     void setHomeScreenStatus(bool status)
     {
-        isHomeScreenActive = status;
+        _isHomeScreenActive = status;
+    }
+    
+    void setNumLessons()
+    {
+        int numLessons = _lessonManager.getNumLessons();
+        _comboBox.clear();
+        for (int i = 1; i <= numLessons; i++)
+        {
+            String LessonTitle = "Lesson " + String(i);
+            _comboBox.addItem(LessonTitle, i);
+        }
     }
     
 private:
-    GroupComponent groupComponent;
-    ComboBox comboBox;
-    TextButton goButton;
-    bool isHomeScreenActive;
+    GroupComponent _groupComponent;
+    ComboBox _comboBox;
+    TextButton _goButton;
+    LessonManager& _lessonManager;
+    bool _isHomeScreenActive;
 
     
     

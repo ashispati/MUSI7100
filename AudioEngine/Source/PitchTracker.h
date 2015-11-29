@@ -123,7 +123,7 @@ protected:
     {
         for (int i = 0; i < windowSize; i++)
         {
-            hammingWindowCoeff[i] = 0.54 - 0.46*cos(2*3.14159*i/(windowSize-1));
+            hammingWindowCoeff[i] = 0.54 - 0.46*cos(2*float_Pi*i/(windowSize-1));
         }
     }
 

@@ -16,6 +16,7 @@
 #include "PitchTracker.h"
 #include "PitchContour.h"
 #include "PianoRoll.h"
+#include "PlaybackSynth.h"
 #include <vector>
 #include <iomanip>
 using namespace std;
@@ -24,65 +25,59 @@ using namespace std;
 class AudioEngine: public AudioSource
 {
 public:
-    AudioEngine() : windowSize(1024), recordingStatus(false)
+    AudioEngine(AudioDeviceManager& deviceManager, AudioSourcePlayer& audioSourcePlayer, MidiKeyboardState& keyState, PitchContour& contour, PianoRoll& roll, LessonManager& lessonManager) :
+            _deviceManager(deviceManager),
+            _audioSourcePlayer(audioSourcePlayer),
+            _windowSize(1024),
+            _recordingStatus(false),
+            _playbackStatus(false),
+            _pitchContour(contour),
+            _pianoRoll(roll),
+            _lessonManager(lessonManager),
+            _keyboardState(keyState)
     {
-        setAudioChannels(2, 0);
-        window = new AudioSampleRingFrame(windowSize);
-        pitchTracker = new ACFPitchTracker();
-        pitchTracker->setSampleRate(sampleRateInputAudio);
-        pitchTracker->setWindowSize(windowSize);
-        numBuffers = 0;
-        channelDataAvg.begin();
+        _window = new AudioSampleRingFrame(_windowSize);
+        _pitchTracker = new ACFPitchTracker();
+        _pitchTracker->setWindowSize(_windowSize);
+        _numBuffers = 0;
+        _channelDataAvg.begin();
+        
+        for (int i = 0; i < 5; i++)
+        {
+            _synth.addVoice(new SynthVoice());
+        }
+        
+        _synth.clearSounds();
+        _synth.addSound(new SynthSound());
     }
     
     ~AudioEngine()
     {
-        delete window;
-        delete pitchTracker;
-        shutDownAudio();
+        delete _window;
+        delete _pitchTracker;
     }
-    
-    void setAudioChannels(int numInputChannels, int numOutputChannels)
-    {
-        String audioError = deviceManager.initialise (numInputChannels, numOutputChannels, nullptr, true);
-        jassert (audioError.isEmpty());
-        deviceManager.addAudioCallback (&audioSourcePlayer);
-        audioSourcePlayer.setSource (this);
-    }
-    
-    void shutDownAudio()
-    {
-        audioSourcePlayer.setSource (nullptr);
-        deviceManager.removeAudioCallback (&audioSourcePlayer);
-        deviceManager.closeAudioDevice();
-    }
-    
-    void setRefereces(PitchContour* contour, PianoRoll* roll)
-    {
-        pitchContour = contour;
-        pianoRoll = roll;
-    }
-    
     
     void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override
     {
-        String message;
-        message << "Preparing to Play Audio... \n";
-        message << "Samples per Block Expected = " << samplesPerBlockExpected << "\n";
-        message << "Sample Rate = " << sampleRate;
-        sampleRateInputAudio = sampleRate;
-        Logger::getCurrentLogger()->writeToLog(message);
+        Logger::getCurrentLogger()->writeToLog("Preparing to Play Audio...");
+        Logger::getCurrentLogger()->writeToLog("Samples per block = " + String(samplesPerBlockExpected));
+        Logger::getCurrentLogger()->writeToLog("Sample Rate = " + String(sampleRate));
+        _sampleRateInputAudio = sampleRate;
+        _midiCollector.reset(sampleRate);
+        _synth.setCurrentPlaybackSampleRate(sampleRate);
+        _pitchTracker->setSampleRate(_sampleRateInputAudio);
+        Logger::getCurrentLogger()->writeToLog("Sample Rate Input to Pitch Tracker = "+String(_pitchTracker->getSampleRate()));
     }
     
     void getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill) override
     {
         double start = Time::getMillisecondCounterHiRes();
-        if(recordingStatus)
+        if(_recordingStatus)
         {
             if (bufferToFill.buffer->getNumChannels() > 0)
             {
                 int bufferSize = bufferToFill.numSamples;
-                int hopSize = window->getHopSize();
+                int hopSize = _window->getHopSize();
                 //Logger::getCurrentLogger()->writeToLog("Recording");
                 
                 const float* channelData1 = bufferToFill.buffer->getWritePointer (0, bufferToFill.startSample);
@@ -90,42 +85,54 @@ public:
                 
                 for(int i = 0; i < bufferSize; i++)
                 {
-                    channelDataAvg.push_back(channelData1[i]);
+                    _channelDataAvg.push_back(channelData1[i]);
                 }
                 /*
-                // code for testing the buffer and pitch tracker
-                for(int i = 0; i < bufferSize; i++)
-                {
-                    float value = 0.5*sin(2*3.14159*440*(i+bufferSize*numBuffers)/44100);
-                    //float value = i + numBuffers*bufferSize;
-                    channelDataAvg.push_back(value);
-                }
-                */
+                 // code for testing the buffer and pitch tracker
+                 for(int i = 0; i < bufferSize; i++)
+                 {
+                 float value = 0.5*sin(2*float_Pi*440*(i+bufferSize*numBuffers)/44100);
+                 //float value = i + numBuffers*bufferSize;
+                 channelDataAvg.push_back(value);
+                 }
+                 */
                 //writeDataToFile(channelDataAvg, bufferSize);
                 
-                while (channelDataAvg.size() >= hopSize)
+                while (_channelDataAvg.size() >= hopSize)
                 {
-                    window->addNextBufferToFrame(channelDataAvg);
+                    _window->addNextBufferToFrame(_channelDataAvg);
                     //window->writeFrameToFile();
-                    float midiPitchOfFrame = pitchTracker->findACFPitchMidi(window);
+                    float midiPitchOfFrame = _pitchTracker->findACFPitchMidi(_window);
                     //writePitchToFile(midiPitchOfFrame);
-                    pitchContour->addNextPitch(midiPitchOfFrame);
-                    pianoRoll->setCurrentQuantizedPitch(pitchTracker->quantizeMidiPitch(midiPitchOfFrame));
-                    channelDataAvg.erase(channelDataAvg.begin(), channelDataAvg.begin()+hopSize);
+                    _pitchContour.addNextPitch(midiPitchOfFrame);
+                    _pianoRoll.setCurrentQuantizedPitch(_pitchTracker->quantizeMidiPitch(midiPitchOfFrame));
+                    _channelDataAvg.erase(_channelDataAvg.begin(), _channelDataAvg.begin()+hopSize);
                 }
             }
             else
             {
                 Logger::getCurrentLogger()->writeToLog("Error: No Input Audio Channel");
             }
-            numBuffers = numBuffers + 1;
+            _numBuffers = _numBuffers + 1;
         }
         else
         {
-            numBuffers = 0;
+            _numBuffers = 0;
         }
         
         bufferToFill.clearActiveBufferRegion();
+        
+        
+        if (_playbackStatus)
+        {
+            MidiBuffer midiBuffer;
+            _lessonManager.handleMidiFile(midiBuffer, bufferToFill.numSamples);
+            _midiCollector.removeNextBlockOfMessages(midiBuffer, bufferToFill.numSamples);
+            //_keyboardState.processNextMidiBuffer(midiBuffer, 0, bufferToFill.numSamples, false);
+            bufferToFill.clearActiveBufferRegion();
+            _synth.renderNextBlock(*bufferToFill.buffer, midiBuffer, 0, bufferToFill.numSamples);
+        }
+        
         double duration = Time::getMillisecondCounterHiRes() - start;
         //cout << duration << endl;
         if (duration > 11.6099773)
@@ -141,31 +148,60 @@ public:
     
     void setRecordingStatus(bool status)
     {
-        recordingStatus = status;
+        _recordingStatus = status;
     }
     
     bool getRecordingStatus()
     {
-        return recordingStatus;
+        return _recordingStatus;
     }
-        
+    
+    void setPlaybackStatus(bool status)
+    {
+        _playbackStatus = status;
+    }
+    
+    bool getPlaybackStatus()
+    {
+        return _playbackStatus;
+    }
+    
     void clear()
     {
-        pitchTracker->clear();
+        _pitchTracker->clear();
+    }
+    
+    void playheadReset()
+    {
+        _lessonManager.resetLesson();
+        _midiCollector.reset(_sampleRateInputAudio);
+        _synth.setCurrentPlaybackSampleRate(_sampleRateInputAudio);
+        _synth.clearVoices();
+        for (int i = 0; i < 5; i++)
+        {
+            _synth.addVoice(new SynthVoice());
+        }
+        _synth.clearSounds();
+        _synth.addSound(new SynthSound());
+        
     }
     
 private:
-    AudioDeviceManager deviceManager;
-    AudioSourcePlayer audioSourcePlayer;
-    const int windowSize;
-    bool recordingStatus;
-    AudioSampleRingFrame* window;
-    ACFPitchTracker* pitchTracker;
-    PitchContour* pitchContour;
-    PianoRoll* pianoRoll;
-    double sampleRateInputAudio;
-    int numBuffers;
-    vector<float> channelDataAvg;
+    AudioDeviceManager& _deviceManager;
+    AudioSourcePlayer& _audioSourcePlayer;
+    const int _windowSize;
+    bool _recordingStatus, _playbackStatus;
+    AudioSampleRingFrame* _window;
+    ACFPitchTracker* _pitchTracker;
+    PitchContour& _pitchContour;
+    PianoRoll& _pianoRoll;
+    LessonManager& _lessonManager;
+    MidiKeyboardState& _keyboardState;
+    MidiMessageCollector _midiCollector;
+    Synthesiser _synth;
+    double _sampleRateInputAudio;
+    int _numBuffers;
+    vector<float> _channelDataAvg;
     
     
     void writeToFile(float channelDataAvg[], int hopSize)

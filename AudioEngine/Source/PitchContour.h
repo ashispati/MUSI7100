@@ -47,9 +47,12 @@ public:
         float currX = 0;
         for(int i = 0; i < pitchesToPlot; i++)
         {
-            currY = getHeight() - getHeight()*(pitchArray[lengthOfPitchArray-pitchesToPlot+i] - 45)/36;
+            currY = getHeight()*(1 - (pitchArray[lengthOfPitchArray-pitchesToPlot+i] - 45)/36);
             currX = (float)i;
-            g.drawLine(prevX, prevY, currX, currY);
+            if (prevY <= getHeight() && currY <= getHeight())
+            {
+                g.drawLine(prevX, prevY, currX, currY);
+            }
             prevX = currX;
             prevY = currY;
         }
