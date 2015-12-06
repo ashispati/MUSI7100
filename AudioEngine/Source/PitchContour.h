@@ -26,6 +26,7 @@ public:
         for(int i = 0; i < lengthOfPitchArray; i++)
         {
             pitchArray.push_back(0);
+            refPitchArray.push_back(0);
         }
         pitchesToPlot = getWidth()/2;
         startTimerHz (30);
@@ -45,6 +46,7 @@ public:
         float prevX = 0;
         float currY = getHeight();
         float currX = 0;
+        
         for(int i = 0; i < pitchesToPlot; i++)
         {
             currY = getHeight()*(1 - (pitchArray[lengthOfPitchArray-pitchesToPlot+i] - 45)/36);
@@ -56,6 +58,24 @@ public:
             prevX = currX;
             prevY = currY;
         }
+        
+        g.setColour (Colours::green);
+        prevY = getHeight();
+        prevX = 0;
+        currY = getHeight();
+        currX = 0;
+        for(int i = 0; i < pitchesToPlot; i++)
+        {
+            currY = getHeight()*(1 - (refPitchArray[lengthOfPitchArray-pitchesToPlot+i] - 45)/36);
+            currX = (float)i;
+            if (prevY <= getHeight() && currY <= getHeight())
+            {
+                g.drawLine(prevX, prevY, currX, currY);
+            }
+            prevX = currX;
+            prevY = currY;
+        }
+        g.setColour (Colours::red);
         g.setFont (14.0f);
         g.drawText (String(pitchArray[lengthOfPitchArray-1]), getLocalBounds(),Justification::centred, true);   // draw some placeholder text
     }
@@ -65,6 +85,12 @@ public:
         pitchArray.erase(pitchArray.begin());
         pitchArray.push_back(pitchOfFrame);
         //Logger::getCurrentLogger()->writeToLog (String(pitchOfFrame));
+    }
+    
+    void addNextRefPitch(int refPitchOfFrame)
+    {
+        refPitchArray.erase(refPitchArray.begin());
+        refPitchArray.push_back(refPitchOfFrame);
     }
     
     void timerCallback() override
@@ -84,14 +110,17 @@ public:
         for(int i = 0; i < lengthOfPitchArray; i++)
         {
             pitchArray[i] = 0;
+            refPitchArray[i] = 0;
         }
     }
     
 
 private:
     vector<float> pitchArray;
+    vector<float> refPitchArray;
     int lengthOfPitchArray;
     int pitchesToPlot;
+    
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PitchContour)
 };

@@ -89,6 +89,8 @@ public:
     void setAudioChannels(int numInputChannels, int numOutputChannels)
     {
         String audioError = deviceManager.initialise (numInputChannels, numOutputChannels, nullptr, true);
+        Logger::getCurrentLogger()->writeToLog("Input Latency: "+String(deviceManager.getCurrentAudioDevice()->getInputLatencyInSamples()));
+        Logger::getCurrentLogger()->writeToLog("Output Latency: "+String(deviceManager.getCurrentAudioDevice()->getOutputLatencyInSamples()));
         jassert (audioError.isEmpty());
         audioSourcePlayer.setSource (&audioEngine);
         deviceManager.addAudioCallback (&audioSourcePlayer);

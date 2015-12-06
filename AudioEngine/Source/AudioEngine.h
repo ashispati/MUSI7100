@@ -39,7 +39,7 @@ public:
         _window = new AudioSampleRingFrame(_windowSize);
         _pitchTracker = new ACFPitchTracker();
         _pitchTracker->setWindowSize(_windowSize);
-        _numBuffers = 0;
+        _numRecordingBuffers = _numPlaybackBuffers = 0;
         _channelDataAvg.begin();
         
         for (int i = 0; i < 5; i++)
@@ -105,6 +105,8 @@ public:
                     float midiPitchOfFrame = _pitchTracker->findACFPitchMidi(_window);
                     //writePitchToFile(midiPitchOfFrame);
                     _pitchContour.addNextPitch(midiPitchOfFrame);
+                    float refPitchOfBlock = _lessonManager.getNextRefPitch(_numRecordingBuffers);
+                    _pitchContour.addNextRefPitch(refPitchOfBlock);
                     _pianoRoll.setCurrentQuantizedPitch(_pitchTracker->quantizeMidiPitch(midiPitchOfFrame));
                     _channelDataAvg.erase(_channelDataAvg.begin(), _channelDataAvg.begin()+hopSize);
                 }
@@ -113,11 +115,11 @@ public:
             {
                 Logger::getCurrentLogger()->writeToLog("Error: No Input Audio Channel");
             }
-            _numBuffers = _numBuffers + 1;
+            _numRecordingBuffers = _numRecordingBuffers + 1;
         }
         else
         {
-            _numBuffers = 0;
+            _numRecordingBuffers = 0;
         }
         
         bufferToFill.clearActiveBufferRegion();
@@ -129,15 +131,22 @@ public:
             _lessonManager.handleMidiFile(midiBuffer, bufferToFill.numSamples);
             _midiCollector.removeNextBlockOfMessages(midiBuffer, bufferToFill.numSamples);
             //_keyboardState.processNextMidiBuffer(midiBuffer, 0, bufferToFill.numSamples, false);
-            bufferToFill.clearActiveBufferRegion();
             _synth.renderNextBlock(*bufferToFill.buffer, midiBuffer, 0, bufferToFill.numSamples);
+            float refPitchOfBlock = _lessonManager.getNextRefPitch(_numPlaybackBuffers);
+            _pitchContour.addNextRefPitch(refPitchOfBlock);
+            _numPlaybackBuffers = _numPlaybackBuffers + 1;
+            
+        }
+        else
+        {
+            _numPlaybackBuffers = 0;
         }
         
         double duration = Time::getMillisecondCounterHiRes() - start;
         //cout << duration << endl;
         if (duration > 11.6099773)
         {
-            Logger::getCurrentLogger()->writeToLog ("Time Exceeded");
+            Logger::getCurrentLogger()->writeToLog ("Time Exceeded in Audio Callback");
         }
     }
     
@@ -200,7 +209,7 @@ private:
     MidiMessageCollector _midiCollector;
     Synthesiser _synth;
     double _sampleRateInputAudio;
-    int _numBuffers;
+    int _numRecordingBuffers, _numPlaybackBuffers;
     vector<float> _channelDataAvg;
     
     
