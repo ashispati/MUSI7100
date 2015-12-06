@@ -19,6 +19,8 @@
 #include "PlaybackSynth.h"
 #include <vector>
 #include <iomanip>
+#include <stdlib.h>
+#include <stdio.h>
 using namespace std;
 
 
@@ -31,10 +33,12 @@ public:
             _windowSize(1024),
             _recordingStatus(false),
             _playbackStatus(false),
+            _metronomeStatus(false),
             _pitchContour(contour),
             _pianoRoll(roll),
             _lessonManager(lessonManager),
-            _keyboardState(keyState)
+            _keyboardState(keyState),
+            _tickMarker(0), _tickCounter(0), _cumulativeSamples(0)
     {
         _window = new AudioSampleRingFrame(_windowSize);
         _pitchTracker = new ACFPitchTracker();
@@ -72,20 +76,21 @@ public:
     void getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill) override
     {
         double start = Time::getMillisecondCounterHiRes();
+        float numSamplesPerTick = _sampleRateInputAudio*60.0f/_lessonManager.getTempoOfLesson();
+        
         if(_recordingStatus)
         {
             if (bufferToFill.buffer->getNumChannels() > 0)
             {
                 int bufferSize = bufferToFill.numSamples;
                 int hopSize = _window->getHopSize();
-                //Logger::getCurrentLogger()->writeToLog("Recording");
                 
                 const float* channelData1 = bufferToFill.buffer->getWritePointer (0, bufferToFill.startSample);
-                //const float* channelData2 = bufferToFill.buffer->getWritePointer (1, bufferToFill.startSample); //check for num of channels
+                const float* channelData2 = bufferToFill.buffer->getWritePointer (1, bufferToFill.startSample); //check for num of channels
                 
                 for(int i = 0; i < bufferSize; i++)
                 {
-                    _channelDataAvg.push_back(channelData1[i]);
+                    _channelDataAvg.push_back((channelData1[i]+channelData2[i])/2);
                 }
                 /*
                  // code for testing the buffer and pitch tracker
@@ -105,11 +110,35 @@ public:
                     float midiPitchOfFrame = _pitchTracker->findACFPitchMidi(_window);
                     //writePitchToFile(midiPitchOfFrame);
                     _pitchContour.addNextPitch(midiPitchOfFrame);
-                    float refPitchOfBlock = _lessonManager.getNextRefPitch(_numRecordingBuffers);
+                    float refPitchOfBlock = _lessonManager.getNextRefPitch(_numRecordingBuffers+_pitchContour.getPitchesToPlot());
                     _pitchContour.addNextRefPitch(refPitchOfBlock);
                     _pianoRoll.setCurrentQuantizedPitch(_pitchTracker->quantizeMidiPitch(midiPitchOfFrame));
                     _channelDataAvg.erase(_channelDataAvg.begin(), _channelDataAvg.begin()+hopSize);
                 }
+                
+                bufferToFill.clearActiveBufferRegion();
+                
+                
+                if (_cumulativeSamples + bufferSize > numSamplesPerTick || _cumulativeSamples == 0)
+                {
+                    if (_cumulativeSamples != 0)
+                    {
+                        _tickMarker = numSamplesPerTick - _cumulativeSamples;
+                        _cumulativeSamples = _cumulativeSamples + bufferSize - numSamplesPerTick;
+                    }
+                    if(_metronomeStatus)
+                    {
+                        for(int i = bufferToFill.buffer->getNumChannels(); --i >= 0;)
+                        {
+                            bufferToFill.buffer->addSample(i, _tickMarker, 1);
+                        }
+                    }
+                }
+                
+                _cumulativeSamples = _cumulativeSamples + bufferSize;
+                
+                
+                
             }
             else
             {
@@ -119,10 +148,10 @@ public:
         }
         else
         {
+            _cumulativeSamples = 0;
+            bufferToFill.clearActiveBufferRegion();
             _numRecordingBuffers = 0;
         }
-        
-        bufferToFill.clearActiveBufferRegion();
         
         
         if (_playbackStatus)
@@ -132,7 +161,7 @@ public:
             _midiCollector.removeNextBlockOfMessages(midiBuffer, bufferToFill.numSamples);
             //_keyboardState.processNextMidiBuffer(midiBuffer, 0, bufferToFill.numSamples, false);
             _synth.renderNextBlock(*bufferToFill.buffer, midiBuffer, 0, bufferToFill.numSamples);
-            float refPitchOfBlock = _lessonManager.getNextRefPitch(_numPlaybackBuffers);
+            float refPitchOfBlock = _lessonManager.getNextRefPitch(_numPlaybackBuffers+_pitchContour.getPitchesToPlot());
             _pitchContour.addNextRefPitch(refPitchOfBlock);
             _numPlaybackBuffers = _numPlaybackBuffers + 1;
             
@@ -141,6 +170,8 @@ public:
         {
             _numPlaybackBuffers = 0;
         }
+        
+        
         
         double duration = Time::getMillisecondCounterHiRes() - start;
         //cout << duration << endl;
@@ -175,6 +206,16 @@ public:
         return _playbackStatus;
     }
     
+    void setMetronomeStatus(bool status)
+    {
+        _metronomeStatus = status;
+    }
+    
+    bool getMetronomeStatus()
+    {
+        return _metronomeStatus;
+    }
+    
     void clear()
     {
         _pitchTracker->clear();
@@ -182,6 +223,7 @@ public:
     
     void playheadReset()
     {
+        clear();
         _lessonManager.resetLesson();
         _midiCollector.reset(_sampleRateInputAudio);
         _synth.setCurrentPlaybackSampleRate(_sampleRateInputAudio);
@@ -199,7 +241,7 @@ private:
     AudioDeviceManager& _deviceManager;
     AudioSourcePlayer& _audioSourcePlayer;
     const int _windowSize;
-    bool _recordingStatus, _playbackStatus;
+    bool _recordingStatus, _playbackStatus, _metronomeStatus;
     AudioSampleRingFrame* _window;
     ACFPitchTracker* _pitchTracker;
     PitchContour& _pitchContour;
@@ -209,7 +251,7 @@ private:
     MidiMessageCollector _midiCollector;
     Synthesiser _synth;
     double _sampleRateInputAudio;
-    int _numRecordingBuffers, _numPlaybackBuffers;
+    int _numRecordingBuffers, _numPlaybackBuffers, _tickMarker, _tickCounter, _cumulativeSamples;
     vector<float> _channelDataAvg;
     
     

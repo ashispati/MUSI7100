@@ -17,7 +17,6 @@
 #include "LessonManager.h"
 #include "HomeScreen.h"
 #include "VocalEvaluation.h"
-#include "MetronomeTimer.h"
 #include "AudioEngine.h"
 #include <vector>
 #include <iomanip>
@@ -35,7 +34,7 @@ public:
     MainContentComponent() :
             audioEngine(deviceManager, audioSourcePlayer, keyboardState, pitchContour, pianoRoll, lessonManager),
             homeScreen(lessonManager),
-            lessonManager(deviceManager),
+            lessonManager(deviceManager,pitchContour),
             windowSize(1024)
     {
         addAndMakeVisible(pitchContour);
@@ -132,9 +131,9 @@ private:
     TextButton backButton;
     TextButton playButton;
     TextButton metronomeButton;
-    AudioEngine audioEngine;
     PitchContour pitchContour;
     PianoRoll pianoRoll;
+    AudioEngine audioEngine;
     HomeScreen homeScreen;
     LessonManager lessonManager;
     MidiKeyboardState keyboardState;
@@ -145,6 +144,7 @@ private:
     
     void startRecording()
     {
+        audioEngine.playheadReset();
         recordButton.setColour (TextButton::buttonColourId, Colour (0xffff5c5c));
         recordButton.setButtonText ("Stop");
     }
@@ -157,15 +157,27 @@ private:
     
     void startPlayback()
     {
+        audioEngine.playheadReset();
         playButton.setColour(TextButton::buttonColourId, Colour(0xffff5c5c));
         playButton.setButtonText ("Stop");
     }
     
     void stopPlayback()
     {
-        audioEngine.playheadReset();
         playButton.setColour(TextButton::buttonColourId, Colours::lightgreen);
         playButton.setButtonText ("Play");
+    }
+    
+    void startMetronome()
+    {
+        metronomeButton.setColour(TextButton::buttonColourId, Colours::orange);
+        metronomeButton.setButtonText ("Stop");
+    }
+    
+    void stopMetronome()
+    {
+        metronomeButton.setColour(TextButton::buttonColourId, Colours::lightgreen);
+        metronomeButton.setButtonText ("Metro");
     }
     
     void disablePlayButton()
@@ -232,6 +244,20 @@ private:
             audioEngine.clear();
             audioEngine.playheadReset();
             
+        }
+        
+        if (button == &metronomeButton)
+        {
+            if(audioEngine.getMetronomeStatus())
+            {
+                stopMetronome();
+                audioEngine.setMetronomeStatus(false);
+            }
+            else
+            {
+                startMetronome();
+                audioEngine.setMetronomeStatus(true);
+            }
         }
         
         if (button == &playButton)

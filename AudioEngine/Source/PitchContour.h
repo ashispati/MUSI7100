@@ -21,7 +21,9 @@ using namespace std;
 class PitchContour    : public Component, private Timer
 {
 public:
-    PitchContour(): lengthOfPitchArray(1000), pitchesToPlot(500)
+    PitchContour():
+            lengthOfPitchArray(1000),
+            pitchesToPlot(500)
     {
         for(int i = 0; i < lengthOfPitchArray; i++)
         {
@@ -42,39 +44,38 @@ public:
         g.setColour (Colours::grey);
         g.drawRect (getLocalBounds(), 1);   // draw an outline around the component
         g.setColour (Colours::red);
-        float prevY = getHeight();
-        float prevX = 0;
-        float currY = getHeight();
-        float currX = 0;
+        float prevYActPitch, prevYRefPitch = getHeight();
+        float prevXActPitch, prevXRefPitch = 0;
+        float currYActPitch, currYRefPitch = getHeight();
+        float currXActPitch, currXRefPitch = 0;
         
         for(int i = 0; i < pitchesToPlot; i++)
         {
-            currY = getHeight()*(1 - (pitchArray[lengthOfPitchArray-pitchesToPlot+i] - 45)/36);
-            currX = (float)i;
-            if (prevY <= getHeight() && currY <= getHeight())
+            g.setColour (Colours::red);
+            currYActPitch = getHeight()*(1 - (pitchArray[lengthOfPitchArray-pitchesToPlot+i] - 45)/36);
+            currXActPitch = (float)i;
+            if (prevYActPitch <= getHeight() && currYActPitch <= getHeight())
             {
-                g.drawLine(prevX, prevY, currX, currY);
+                g.drawLine(prevXActPitch, prevYActPitch, currXActPitch, currYActPitch);
             }
-            prevX = currX;
-            prevY = currY;
+            prevXActPitch = currXActPitch;
+            prevYActPitch = currYActPitch;
+            
         }
         
-        g.setColour (Colours::green);
-        prevY = getHeight();
-        prevX = 0;
-        currY = getHeight();
-        currX = 0;
-        for(int i = 0; i < pitchesToPlot; i++)
+        for(int i = 0; i < 2*pitchesToPlot; i++)
         {
-            currY = getHeight()*(1 - (refPitchArray[lengthOfPitchArray-pitchesToPlot+i] - 45)/36);
-            currX = (float)i;
-            if (prevY <= getHeight() && currY <= getHeight())
+            g.setColour (Colours::green);
+            currYRefPitch = getHeight()*(1 - (refPitchArray[lengthOfPitchArray-2*pitchesToPlot+i] - 45)/36);
+            currXRefPitch = (float)i;
+            if (prevYRefPitch <= getHeight() && currYRefPitch <= getHeight())
             {
-                g.drawLine(prevX, prevY, currX, currY);
+                g.drawLine(prevXRefPitch, prevYRefPitch, currXRefPitch, currYRefPitch,2);
             }
-            prevX = currX;
-            prevY = currY;
+            prevXRefPitch = currXRefPitch;
+            prevYRefPitch = currYRefPitch;
         }
+        
         g.setColour (Colours::red);
         g.setFont (14.0f);
         g.drawText (String(pitchArray[lengthOfPitchArray-1]), getLocalBounds(),Justification::centred, true);   // draw some placeholder text
@@ -92,6 +93,21 @@ public:
         refPitchArray.erase(refPitchArray.begin());
         refPitchArray.push_back(refPitchOfFrame);
     }
+    
+    void addNextRefPitchInitial(vector<float> refPitch)
+    {
+        for (int i = 0; i < pitchesToPlot; i++)
+        {
+            refPitchArray.erase(refPitchArray.begin());
+            refPitchArray.push_back(refPitch[i]);
+        }
+    }
+    
+    int getPitchesToPlot()
+    {
+        return pitchesToPlot;
+    }
+    
     
     void timerCallback() override
     {

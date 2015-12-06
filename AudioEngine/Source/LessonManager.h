@@ -13,14 +13,16 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "ACFPitchTracker.h"
 #include "PitchTracker.h"
+#include "PitchContour.h"
 #include <vector>
 #include <stdlib.h>
 
 class LessonManager : public MidiFile
 {
 public:
-    LessonManager(AudioDeviceManager& deviceManager):
+    LessonManager(AudioDeviceManager& deviceManager, PitchContour& pitchContour):
     _deviceManager(deviceManager),
+    _pitchContour(pitchContour),
     _lessonSelected(0),
     _numMidiEvents(0),
     _nextEventID(0),
@@ -55,12 +57,9 @@ public:
         // read the current selected lesson and compute the reference pitch Contour
     }
     
-    int getTempoOfLesson()
+    float getTempoOfLesson()
     {
-        //returns the tempo in BPM of the input MIDI file
-        //will be used by the metronome class to play the metronome
-        int tempo;
-        return tempo;
+        return _tempo;
     }
     
     int getNumLessons()
@@ -124,6 +123,7 @@ public:
         {
             _midiFile.readFrom(midiFileStream);
             readMidiFile();
+            getReferencePitch(_numMidiEvents);
         }
     }
     
@@ -143,6 +143,7 @@ private:
     AudioDeviceManager& _deviceManager;
     MidiFile _midiFile;
     MidiMessageSequence _midiSequence;
+    PitchContour& _pitchContour;
     vector<float> _refPitch;
     File _file;
     int _numLessons;
@@ -151,7 +152,7 @@ private:
     int _nextEventID;
     int _samplePos, _sampleOfNextMidi;
     double _sampleRate;
-    double _tempo;
+    float _tempo;
     int _hopSize;
     int _sizeOfRefPitch;
     int _refPitchCounter;
@@ -195,12 +196,14 @@ private:
                     {
                         _refPitch[j] = note;
                     }
-                    Logger::getCurrentLogger()->writeToLog("Midi Note: "+String(note)+" Start Time: "+String(noteStartTime)+" Stop Time: "+String(noteStopTime));
+                    //Logger::getCurrentLogger()->writeToLog("Midi Note: "+String(note)+" Start Time: "+String(noteStartTime)+" Stop Time: "+String(noteStopTime));
                     Logger::getCurrentLogger()->writeToLog("Midi Note: "+String(note)+" Start Index: "+String(noteStartIndex)+" Stop Index: "+String(noteStopIndex));
                 }
             }
         }
-        writeDataToFile();
+        _pitchContour.clear();
+        _pitchContour.addNextRefPitchInitial(_refPitch);
+        
     }
     
     void readMidiFile()
