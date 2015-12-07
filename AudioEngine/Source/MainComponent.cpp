@@ -32,42 +32,43 @@ class MainContentComponent   : public Component, public Button::Listener
 public:
     //==============================================================================
     MainContentComponent() :
-            audioEngine(deviceManager, audioSourcePlayer, keyboardState, pitchContour, pianoRoll, lessonManager),
-            homeScreen(lessonManager),
-            lessonManager(deviceManager,pitchContour),
-            windowSize(1024)
+            _audioEngine(_deviceManager, _audioSourcePlayer, _pitchTracker,_keyboardState, _pitchContour, _pianoRoll, _lessonManager),
+            _homeScreen(_lessonManager),
+            _lessonManager(_deviceManager,_pitchContour),
+            _vocalEvaluation(_pitchTracker,_lessonManager),
+            _windowSize(1024), _accuracy(0)
     {
-        addAndMakeVisible(pitchContour);
-        addAndMakeVisible(pianoRoll);
+        addAndMakeVisible(_pitchContour);
+        addAndMakeVisible(_pianoRoll);
         
-        recordButton.setColour (TextButton::buttonColourId, Colours::lightgreen );
-        recordButton.setColour (TextButton::textColourOnId, Colours::black);
-        recordButton.setButtonText ("Record");
-        recordButton.addListener(this);
-        addAndMakeVisible(recordButton);
+        _recordButton.setColour (TextButton::buttonColourId, Colours::lightgreen );
+        _recordButton.setColour (TextButton::textColourOnId, Colours::black);
+        _recordButton.setButtonText ("Record");
+        _recordButton.addListener(this);
+        addAndMakeVisible(_recordButton);
         
-        backButton.setColour (TextButton::buttonColourId, Colours::lightgreen );
-        backButton.setColour (TextButton::textColourOnId, Colours::black);
-        backButton.setButtonText ("Back");
-        backButton.addListener(this);
-        addAndMakeVisible(backButton);
+        _backButton.setColour (TextButton::buttonColourId, Colours::lightgreen );
+        _backButton.setColour (TextButton::textColourOnId, Colours::black);
+        _backButton.setButtonText ("Back");
+        _backButton.addListener(this);
+        addAndMakeVisible(_backButton);
         
-        playButton.setColour (TextButton::buttonColourId, Colours::lightgreen );
-        playButton.setColour (TextButton::textColourOnId, Colours::black);
-        playButton.setButtonText ("Play");
-        playButton.addListener(this);
-        addAndMakeVisible(playButton);
+        _playButton.setColour (TextButton::buttonColourId, Colours::lightgreen );
+        _playButton.setColour (TextButton::textColourOnId, Colours::black);
+        _playButton.setButtonText ("Play");
+        _playButton.addListener(this);
+        addAndMakeVisible(_playButton);
         
-        metronomeButton.setColour (TextButton::buttonColourId, Colours::lightgreen );
-        metronomeButton.setColour (TextButton::textColourOnId, Colours::black);
-        metronomeButton.setButtonText ("Metro");
-        metronomeButton.addListener(this);
-        addAndMakeVisible(metronomeButton);
+        _metronomeButton.setColour (TextButton::buttonColourId, Colours::lightgreen );
+        _metronomeButton.setColour (TextButton::textColourOnId, Colours::black);
+        _metronomeButton.setButtonText ("Metro");
+        _metronomeButton.addListener(this);
+        addAndMakeVisible(_metronomeButton);
         
         setAudioChannels(2, 2);
         
-        homeScreen.setNumLessons();
-        addAndMakeVisible(homeScreen);
+        _homeScreen.setNumLessons();
+        addAndMakeVisible(_homeScreen);
         
         setOpaque(true);
         setSize (800, 400);
@@ -75,29 +76,31 @@ public:
 
     ~MainContentComponent()
     {
-        recordButton.removeListener(this);
-        backButton.removeListener(this);
-        playButton.removeListener(this);
-        metronomeButton.removeListener(this);
-        audioSourcePlayer.setSource (nullptr);
-        deviceManager.removeAudioCallback (&audioSourcePlayer);
-        deviceManager.closeAudioDevice();
+        _recordButton.removeListener(this);
+        _backButton.removeListener(this);
+        _playButton.removeListener(this);
+        _metronomeButton.removeListener(this);
+        _audioSourcePlayer.setSource (nullptr);
+        _deviceManager.removeAudioCallback (&_audioSourcePlayer);
+        _deviceManager.closeAudioDevice();
     }
 
     //=======================================================================
     void setAudioChannels(int numInputChannels, int numOutputChannels)
     {
-        String audioError = deviceManager.initialise (numInputChannels, numOutputChannels, nullptr, true);
-        Logger::getCurrentLogger()->writeToLog("Input Latency: "+String(deviceManager.getCurrentAudioDevice()->getInputLatencyInSamples()));
-        Logger::getCurrentLogger()->writeToLog("Output Latency: "+String(deviceManager.getCurrentAudioDevice()->getOutputLatencyInSamples()));
+        String audioError = _deviceManager.initialise (numInputChannels, numOutputChannels, nullptr, true);
+        Logger::getCurrentLogger()->writeToLog("Input Latency: "+String(_deviceManager.getCurrentAudioDevice()->getInputLatencyInSamples()));
+        Logger::getCurrentLogger()->writeToLog("Output Latency: "+String(_deviceManager.getCurrentAudioDevice()->getOutputLatencyInSamples()));
         jassert (audioError.isEmpty());
-        audioSourcePlayer.setSource (&audioEngine);
-        deviceManager.addAudioCallback (&audioSourcePlayer);
+        _audioSourcePlayer.setSource (&_audioEngine);
+        _deviceManager.addAudioCallback (&_audioSourcePlayer);
     }
     
     void paint (Graphics& g) override
     {
         g.fillAll (Colours::white);
+        g.setColour(Colours::red);
+        g.drawText("Overall Score: "+String((int)(_accuracy*100))+"%", getWidth()-200, getHeight()-2*getHeight()/30, 200, 2*getHeight()/30, Justification::centred, true );   // draw some placeholder text
 
         // You can add your drawing code here!
     }
@@ -112,13 +115,13 @@ public:
         int posy = getHeight()-offSetY1;
         int widthPianoRoll = getWidth()/16;
         int offSetY2 = getHeight()/12;
-        recordButton.setBounds(posx-offSetX1, posy-offSetY1, 1.5*buttonWidth, buttonHeight);
-        backButton.setBounds(offSetX1, posy-offSetY1, buttonWidth, buttonHeight);
-        playButton.setBounds(posx - 4*offSetX1, posy-offSetY1, buttonWidth, buttonHeight);
-        metronomeButton.setBounds(posx + 3*offSetX1, posy-offSetY1, buttonWidth, buttonHeight);
-        pianoRoll.setBounds(offSetX1, offSetY1, widthPianoRoll, posy-offSetY2);
-        pitchContour.setBounds(2*offSetX1, offSetY1, posx*2-4*offSetX1, posy-offSetY2);
-        homeScreen.setBounds(getLocalBounds());
+        _recordButton.setBounds(posx-offSetX1, posy-offSetY1, 1.5*buttonWidth, buttonHeight);
+        _backButton.setBounds(offSetX1, posy-offSetY1, buttonWidth, buttonHeight);
+        _playButton.setBounds(posx - 4*offSetX1, posy-offSetY1, buttonWidth, buttonHeight);
+        _metronomeButton.setBounds(posx + 3*offSetX1, posy-offSetY1, buttonWidth, buttonHeight);
+        _pianoRoll.setBounds(offSetX1, offSetY1, widthPianoRoll, posy-offSetY2);
+        _pitchContour.setBounds(2*offSetX1, offSetY1, posx*2-4*offSetX1, posy-offSetY2);
+        _homeScreen.setBounds(getLocalBounds());
     }
     
     void setHomeScreenStatus(bool status)
@@ -127,154 +130,160 @@ public:
     }
 
 private:
-    TextButton recordButton;
-    TextButton backButton;
-    TextButton playButton;
-    TextButton metronomeButton;
-    PitchContour pitchContour;
-    PianoRoll pianoRoll;
-    AudioEngine audioEngine;
-    HomeScreen homeScreen;
-    LessonManager lessonManager;
-    MidiKeyboardState keyboardState;
-    AudioDeviceManager deviceManager;
-    AudioSourcePlayer audioSourcePlayer;
-    const int windowSize;
+    TextButton _recordButton;
+    TextButton _backButton;
+    TextButton _playButton;
+    TextButton _metronomeButton;
+    ACFPitchTracker _pitchTracker;
+    PitchContour _pitchContour;
+    PianoRoll _pianoRoll;
+    AudioEngine _audioEngine;
+    HomeScreen _homeScreen;
+    LessonManager _lessonManager;
+    MidiKeyboardState _keyboardState;
+    AudioDeviceManager _deviceManager;
+    AudioSourcePlayer _audioSourcePlayer;
+    VocalEvaluation _vocalEvaluation;
+    const int _windowSize;
+    float _accuracy;
     
     
     void startRecording()
     {
-        audioEngine.playheadReset();
-        recordButton.setColour (TextButton::buttonColourId, Colour (0xffff5c5c));
-        recordButton.setButtonText ("Stop");
+        _audioEngine.playheadReset();
+        _recordButton.setColour (TextButton::buttonColourId, Colour (0xffff5c5c));
+        _recordButton.setButtonText ("Stop");
     }
     
     void stopRecording()
     {
-        recordButton.setColour (TextButton::buttonColourId, Colours::lightgreen);
-        recordButton.setButtonText ("Record");
+        _recordButton.setColour (TextButton::buttonColourId, Colours::lightgreen);
+        _recordButton.setButtonText ("Record");
     }
     
     void startPlayback()
     {
-        audioEngine.playheadReset();
-        playButton.setColour(TextButton::buttonColourId, Colour(0xffff5c5c));
-        playButton.setButtonText ("Stop");
+        _audioEngine.playheadReset();
+        _playButton.setColour(TextButton::buttonColourId, Colour(0xffff5c5c));
+        _playButton.setButtonText ("Stop");
     }
     
     void stopPlayback()
     {
-        playButton.setColour(TextButton::buttonColourId, Colours::lightgreen);
-        playButton.setButtonText ("Play");
+        _playButton.setColour(TextButton::buttonColourId, Colours::lightgreen);
+        _playButton.setButtonText ("Play");
     }
     
     void startMetronome()
     {
-        metronomeButton.setColour(TextButton::buttonColourId, Colours::orange);
-        metronomeButton.setButtonText ("Stop");
+        _metronomeButton.setColour(TextButton::buttonColourId, Colours::orange);
+        _metronomeButton.setButtonText ("Stop");
     }
     
     void stopMetronome()
     {
-        metronomeButton.setColour(TextButton::buttonColourId, Colours::lightgreen);
-        metronomeButton.setButtonText ("Metro");
+        _metronomeButton.setColour(TextButton::buttonColourId, Colours::lightgreen);
+        _metronomeButton.setButtonText ("Metro");
     }
     
     void disablePlayButton()
     {
-        playButton.setColour(TextButton::buttonColourId, Colours::lightgrey);
-        playButton.setEnabled(false);
+        _playButton.setColour(TextButton::buttonColourId, Colours::lightgrey);
+        _playButton.setEnabled(false);
     }
     
     void enablePlayButton()
     {
-        playButton.setColour(TextButton::buttonColourId, Colours::lightgreen);
-        playButton.setEnabled(true);
+        _playButton.setColour(TextButton::buttonColourId, Colours::lightgreen);
+        _playButton.setEnabled(true);
     }
     
     void disableRecordButton()
     {
-        recordButton.setColour(TextButton::buttonColourId, Colours::lightgrey);
-        recordButton.setEnabled(false);
+        _recordButton.setColour(TextButton::buttonColourId, Colours::lightgrey);
+        _recordButton.setEnabled(false);
     }
     
     void enableRecordButton()
     {
-        recordButton.setColour(TextButton::buttonColourId, Colours::lightgreen);
-        recordButton.setEnabled(true);
+        _recordButton.setColour(TextButton::buttonColourId, Colours::lightgreen);
+        _recordButton.setEnabled(true);
     }
     
     void disableBackButton()
     {
-        backButton.setColour(TextButton::buttonColourId, Colours::lightgrey);
-        backButton.setEnabled(false);
+        _backButton.setColour(TextButton::buttonColourId, Colours::lightgrey);
+        _backButton.setEnabled(false);
     }
     
     void enableBackButton()
     {
-        backButton.setColour(TextButton::buttonColourId, Colours::lightgreen);
-        backButton.setEnabled(true);
+        _backButton.setColour(TextButton::buttonColourId, Colours::lightgreen);
+        _backButton.setEnabled(true);
     }
     
     void buttonClicked (Button* button) override
     {
-        if (button == &recordButton)
+        if (button == &_recordButton)
         {
-            if (audioEngine.getRecordingStatus())
+            if (_audioEngine.getRecordingStatus())
             {
                 stopRecording();
                 enablePlayButton();
                 enableBackButton();
-                audioEngine.setRecordingStatus(false);
+                _accuracy = _vocalEvaluation.overallPerformanceMeasure(_audioEngine.getNumRecordingBuffers());
+                repaint();
+                Logger::getCurrentLogger()->writeToLog("The overall performance accuracy is: "+String(_accuracy*100)+"%");
+                _audioEngine.setRecordingStatus(false);
             }
             else
             {
                 startRecording();
                 disablePlayButton();
                 disableBackButton();
-                audioEngine.setRecordingStatus(true);
+                _audioEngine.setRecordingStatus(true);
             }
         }
-        if (button == &backButton)
+        if (button == &_backButton)
         {
-            homeScreen.setVisible(true);
-            homeScreen.setHomeScreenStatus(true);
-            pitchContour.clear();
-            pianoRoll.clear();
-            audioEngine.clear();
-            audioEngine.playheadReset();
+            _homeScreen.setVisible(true);
+            _homeScreen.setHomeScreenStatus(true);
+            _pitchContour.clear();
+            _pianoRoll.clear();
+            _audioEngine.clear();
+            _audioEngine.playheadReset();
             
         }
         
-        if (button == &metronomeButton)
+        if (button == &_metronomeButton)
         {
-            if(audioEngine.getMetronomeStatus())
+            if(_audioEngine.getMetronomeStatus())
             {
                 stopMetronome();
-                audioEngine.setMetronomeStatus(false);
+                _audioEngine.setMetronomeStatus(false);
             }
             else
             {
                 startMetronome();
-                audioEngine.setMetronomeStatus(true);
+                _audioEngine.setMetronomeStatus(true);
             }
         }
         
-        if (button == &playButton)
+        if (button == &_playButton)
         {
-            if(audioEngine.getPlaybackStatus())
+            if(_audioEngine.getPlaybackStatus())
             {
                 stopPlayback();
                 enableRecordButton();
                 enableBackButton();
-                audioEngine.setPlaybackStatus(false);
+                _audioEngine.setPlaybackStatus(false);
             }
             else
             {
                 startPlayback();
                 disableRecordButton();
                 disableBackButton();
-                audioEngine.setPlaybackStatus(true);
+                _audioEngine.setPlaybackStatus(true);
             }
         }
     }

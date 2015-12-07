@@ -85,6 +85,7 @@ public:
             midiPitch = 69 + 12*log(pitchInHz/440)/log(2);
         }
         midiPitchArray.push_back(midiPitch);
+        Logger::getCurrentLogger()->writeToLog("Midi Pitch: "+String(midiPitchArray[1]));
         return midiPitch;
     }
     
@@ -92,6 +93,11 @@ public:
     {
         int pitchValue = (int)round(pitchInMidi);
         return pitchValue;
+    }
+    
+    float getPitchAtIndex(int index)
+    {
+        return midiPitchArray[index];
     }
     
     void clear()

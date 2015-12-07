@@ -139,6 +139,16 @@ public:
         }
     }
     
+    int getSizeOfRefPitch()
+    {
+        return _sizeOfRefPitch;
+    }
+    
+    float getPitchAtIndex(int index)
+    {
+        return _refPitch[index];
+    }
+    
 private:
     AudioDeviceManager& _deviceManager;
     MidiFile _midiFile;

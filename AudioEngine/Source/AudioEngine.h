@@ -27,13 +27,14 @@ using namespace std;
 class AudioEngine: public AudioSource
 {
 public:
-    AudioEngine(AudioDeviceManager& deviceManager, AudioSourcePlayer& audioSourcePlayer, MidiKeyboardState& keyState, PitchContour& contour, PianoRoll& roll, LessonManager& lessonManager) :
+    AudioEngine(AudioDeviceManager& deviceManager, AudioSourcePlayer& audioSourcePlayer, ACFPitchTracker& pitchTracker, MidiKeyboardState& keyState, PitchContour& contour, PianoRoll& roll, LessonManager& lessonManager) :
             _deviceManager(deviceManager),
             _audioSourcePlayer(audioSourcePlayer),
             _windowSize(1024),
             _recordingStatus(false),
             _playbackStatus(false),
             _metronomeStatus(false),
+            _pitchTracker(pitchTracker),
             _pitchContour(contour),
             _pianoRoll(roll),
             _lessonManager(lessonManager),
@@ -41,8 +42,7 @@ public:
             _tickMarker(0), _tickCounter(0), _cumulativeSamples(0)
     {
         _window = new AudioSampleRingFrame(_windowSize);
-        _pitchTracker = new ACFPitchTracker();
-        _pitchTracker->setWindowSize(_windowSize);
+        _pitchTracker.setWindowSize(_windowSize);
         _numRecordingBuffers = _numPlaybackBuffers = 0;
         _channelDataAvg.begin();
         
@@ -58,7 +58,7 @@ public:
     ~AudioEngine()
     {
         delete _window;
-        delete _pitchTracker;
+        //delete _pitchTracker;
     }
     
     void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override
@@ -69,8 +69,8 @@ public:
         _sampleRateInputAudio = sampleRate;
         _midiCollector.reset(sampleRate);
         _synth.setCurrentPlaybackSampleRate(sampleRate);
-        _pitchTracker->setSampleRate(_sampleRateInputAudio);
-        Logger::getCurrentLogger()->writeToLog("Sample Rate Input to Pitch Tracker = "+String(_pitchTracker->getSampleRate()));
+        _pitchTracker.setSampleRate(_sampleRateInputAudio);
+        Logger::getCurrentLogger()->writeToLog("Sample Rate Input to Pitch Tracker = "+String(_pitchTracker.getSampleRate()));
     }
     
     void getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill) override
@@ -107,12 +107,12 @@ public:
                 {
                     _window->addNextBufferToFrame(_channelDataAvg);
                     //window->writeFrameToFile();
-                    float midiPitchOfFrame = _pitchTracker->findACFPitchMidi(_window);
+                    float midiPitchOfFrame = _pitchTracker.findACFPitchMidi(_window);
                     //writePitchToFile(midiPitchOfFrame);
                     _pitchContour.addNextPitch(midiPitchOfFrame);
                     float refPitchOfBlock = _lessonManager.getNextRefPitch(_numRecordingBuffers+_pitchContour.getPitchesToPlot());
                     _pitchContour.addNextRefPitch(refPitchOfBlock);
-                    _pianoRoll.setCurrentQuantizedPitch(_pitchTracker->quantizeMidiPitch(midiPitchOfFrame));
+                    _pianoRoll.setCurrentQuantizedPitch(_pitchTracker.quantizeMidiPitch(midiPitchOfFrame));
                     _channelDataAvg.erase(_channelDataAvg.begin(), _channelDataAvg.begin()+hopSize);
                 }
                 
@@ -218,7 +218,7 @@ public:
     
     void clear()
     {
-        _pitchTracker->clear();
+        _pitchTracker.clear();
     }
     
     void playheadReset()
@@ -237,13 +237,18 @@ public:
         
     }
     
+    int getNumRecordingBuffers()
+    {
+        return _numRecordingBuffers;
+    }
+    
 private:
     AudioDeviceManager& _deviceManager;
     AudioSourcePlayer& _audioSourcePlayer;
     const int _windowSize;
     bool _recordingStatus, _playbackStatus, _metronomeStatus;
     AudioSampleRingFrame* _window;
-    ACFPitchTracker* _pitchTracker;
+    ACFPitchTracker& _pitchTracker;
     PitchContour& _pitchContour;
     PianoRoll& _pianoRoll;
     LessonManager& _lessonManager;

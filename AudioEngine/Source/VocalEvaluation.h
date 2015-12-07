@@ -21,30 +21,26 @@ using namespace std;
 class VocalEvaluation
 {
 public:
-    VocalEvaluation()
+    VocalEvaluation(ACFPitchTracker& pitchTracker, LessonManager& lessonManager):
+            _pitchTracker(pitchTracker),
+            _lessonManager(lessonManager)
     {
-        sungPitch = new ACFPitchTracker();
-    }
-    
-    VocalEvaluation(ACFPitchTracker* pitchTracker, LessonManager* lessonToEvaluate)
-    {
-        sungPitch = pitchTracker;
-        lesson = lessonToEvaluate;
+       
     }
     
     ~VocalEvaluation()
     {
     }
     
-    float overallPerformanceMeasure()
+    float overallPerformanceMeasure(int lengthOfArray)
     {
-        //gives the overall vocal performance to display on screen finally at the end of the performance
+        return evaluatePitchAccuray(lengthOfArray);
     }
     
 
 private:
-    ACFPitchTracker* sungPitch;
-    LessonManager* lesson;
+    ACFPitchTracker& _pitchTracker;
+    LessonManager& _lessonManager;
     
     float evaluatePitchSteadiness()
     {
@@ -61,14 +57,78 @@ private:
         //finds the note Segments of the sungPitch
     }
     
-    float evaluatePitchAccuray()
+    float evaluatePitchAccuray(int lengthOfArray)
     {
-        //evaluates the accuracy of the sungPitch measures against the lesson
+        if (lengthOfArray == 0)
+        {
+            Logger::getCurrentLogger()->writeToLog("Not enough length of recording to evaluate");
+            return 0.0f;
+        }
+        
+        else if (lengthOfArray > _lessonManager.getSizeOfRefPitch())
+        {
+            int numNotesEvaluated = 0;
+            int numCorrectNotes = 0;
+            for (int i = 0; i < _lessonManager.getSizeOfRefPitch(); i++)
+            {
+                if ((int)_lessonManager.getPitchAtIndex(i) != 0)
+                {
+                    float sungPitch = _pitchTracker.getPitchAtIndex(i);
+                    float refPitch = _lessonManager.getPitchAtIndex(i);
+                    if ( abs(sungPitch-refPitch)<0.5)
+                    {
+                        numCorrectNotes++;
+                    }
+                    numNotesEvaluated++;
+                }
+                
+            }
+            if(numNotesEvaluated == 0)
+            {
+                Logger::getCurrentLogger()->writeToLog("Not enough length of recording to evaluate");
+                return 0;
+            }
+            else
+            {
+                float accuracy = (float)numCorrectNotes/(float)numNotesEvaluated;
+                return accuracy;
+            }
+        }
+        else
+        {
+            int numNotesEvaluated = 0;
+            int numCorrectNotes = 0;
+            for (int i = 0; i < lengthOfArray; i++)
+            {
+                if ((int)_lessonManager.getPitchAtIndex(i) != 0)
+                {
+                    float sungPitch = _pitchTracker.getPitchAtIndex(i);
+                    float refPitch = _lessonManager.getPitchAtIndex(i);
+                    if ( abs(sungPitch-refPitch)<0.50)
+                    {
+                        numCorrectNotes++;
+                    }
+                    numNotesEvaluated++;
+                }
+
+            }
+            if(numNotesEvaluated == 0)
+            {
+                Logger::getCurrentLogger()->writeToLog("Not enough length of recording to evaluate");
+                return 0;
+            }
+            else
+            {
+                float accuracy = (float)numCorrectNotes/(float)numNotesEvaluated;
+                return accuracy;
+            }
+        }
+        
     }
 
-    float evaluateNoteTiming()
+    float evaluateNoteTiming(int lengthOfArray)
     {
-        //evalutes the accuracy in timing of the notes
+        //evaluates the timing accuracy of the notes measures
     }
     
 };
